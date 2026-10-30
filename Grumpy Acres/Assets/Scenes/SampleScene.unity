@@ -17162,7 +17162,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1707243587}
   - component: {fileID: 1707243586}
-  - component: {fileID: 1707243585}
   m_Layer: 0
   m_Name: FarmGrid
   m_TagString: Untagged
@@ -17170,33 +17169,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1707243585
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1707243584}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0cc64d9677d4e5247bf8f134df86af7b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FarmTilemap
-  ground: {fileID: 97201552}
-  path: {fileID: 144155864}
-  soil: {fileID: 1823585046}
-  water: {fileID: 486827516}
-  decor: {fileID: 1675481476}
-  obstacles: {fileID: 1359394957}
-  homeBase: {fileID: 646642128}
-  enemySpawns:
-  - {fileID: 98529037}
-  - {fileID: 1400648374}
-  - {fileID: 629820989}
-  - {fileID: 921874569}
-  infectedTint: {r: 0.65, g: 0.45, b: 0.85, a: 1}
-  spreadInterval: 5
-  spreadChance: 0.25
 --- !u!156049354 &1707243586
 Grid:
   m_ObjectHideFlags: 0
