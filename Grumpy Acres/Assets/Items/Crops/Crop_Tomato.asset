@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ba8f5f66d581bf4689ff2f738a308e4, type: 3}
+  m_Name: Crop_Tomato
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  id: crop_tomato
+  itemName: "C\xE0 Chua"
+  icon: {fileID: 4297341478279314326, guid: f72a1173341da6d4bae349d8c289b663, type: 3}
+  itemType: 2
+  description: "Qu\u1EA3 c\xE0 chua \u0111\u1ECF m\u1ECDng n\u01B0\u1EDBc v\u1EEBa
+    m\u1EDBi thu ho\u1EA1ch."
+  maxStack: 99
+  toolType: 0
+  cropYield: {fileID: 0}
+  growthDays: 0
+  buyPrice: 25
+  sellPrice: 25

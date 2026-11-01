@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ba8f5f66d581bf4689ff2f738a308e4, type: 3}
+  m_Name: Seed_Wheat
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  id: seed_wheat
+  itemName: "H\u1EA1t Gi\u1ED1ng L\xFAa M\xEC"
+  icon: {fileID: -1520464275711702150, guid: f72a1173341da6d4bae349d8c289b663, type: 3}
+  itemType: 1
+  description: "Gieo l\xEAn \xF4 \u0111\u1EA5t \u0111\xE3 cu\u1ED1c. T\u01B0\u1EDBi n\u01B0\u1EDBc \u0111\u1EC3 l\u1EDBn nhanh h\u01A1n."
+  maxStack: 99
+  toolType: 0
+  cropYield: {fileID: 11400000, guid: 68dc6f754655408991acf7d276a053ec, type: 2}
+  growthSeconds: 30
+  growthDays: 2
+  buyPrice: 8
+  sellPrice: 3
+  growthStages:
+  - {fileID: 5948641798370750294, guid: f72a1173341da6d4bae349d8c289b663, type: 3}
+  - {fileID: 5058475039834708109, guid: f72a1173341da6d4bae349d8c289b663, type: 3}
+  - {fileID: -5851081182633989459, guid: f72a1173341da6d4bae349d8c289b663, type: 3}
+  - {fileID: 6079774163305446742, guid: f72a1173341da6d4bae349d8c289b663, type: 3}
+  - {fileID: 3960490926407349111, guid: f72a1173341da6d4bae349d8c289b663, type: 3}
+  - {fileID: 3241996293904951389, guid: f72a1173341da6d4bae349d8c289b663, type: 3}
+  - {fileID: -4856102083807339555, guid: f72a1173341da6d4bae349d8c289b663, type: 3}
+  - {fileID: 8490287445921102326, guid: f72a1173341da6d4bae349d8c289b663, type: 3}
+  - {fileID: -2684049326710523449, guid: f72a1173341da6d4bae349d8c289b663, type: 3}

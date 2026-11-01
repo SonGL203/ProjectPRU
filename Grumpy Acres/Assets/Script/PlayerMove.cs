@@ -15,6 +15,9 @@ public class PlayerMove : MonoBehaviour
     public Tilemap[] blockers;
     public Color tilledColor = new(0.8f, 0.6f, 0.45f);
 
+    [Tooltip("Ve tile vao day de danh dau vung duoc phep cuoc dat. Tat Tilemap Renderer de an di trong game.")]
+    public Tilemap farmZone;
+
     Rigidbody2D rb;
     Animator anim;
     Vector2 input;
@@ -46,12 +49,31 @@ public class PlayerMove : MonoBehaviour
         if (input != Vector2.zero)
             facing = Mathf.Abs(x) > Mathf.Abs(y) ? new Vector2(x, 0) : new Vector2(0, y);
 
-        if (kb.spaceKey.wasPressedThisFrame)
+        var mouse = Mouse.current;
+        bool mouseTillPressed = false;
+        if (mouse != null && mouse.leftButton.wasPressedThisFrame)
         {
-            input = Vector2.zero;
-            hoeTimer = hoeTime;
-            Play("Hoe", true);
-            return;
+            if (UnityEngine.EventSystems.EventSystem.current == null || !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            {
+                mouseTillPressed = true;
+            }
+        }
+
+        if (kb.spaceKey.wasPressedThisFrame || mouseTillPressed)
+        {
+            var activeSlot = InventorySystem.Instance != null ? InventorySystem.Instance.GetSelected() : null;
+            var activeItem = activeSlot != null ? activeSlot.item : null;
+            
+            // Bat buoc phai cam Cuoc (Tool_Hoe) moi duoc phep cuoc dat!
+            bool canTill = activeItem != null && activeItem.itemType == ItemType.Tool && activeItem.toolType == ToolType.Hoe;
+
+            if (canTill)
+            {
+                input = Vector2.zero;
+                hoeTimer = hoeTime;
+                Play("Hoe", true);
+                return;
+            }
         }
         Play(input == Vector2.zero ? "Idle" : "Run");
     }
@@ -73,7 +95,10 @@ public class PlayerMove : MonoBehaviour
         if (!soil || !soilTile) return;
         var feet = rb.position + new Vector2(0f, -0.4f);
         var cell = soil.WorldToCell(feet + facing * 0.8f);
+        var fzCell = farmZone ? farmZone.WorldToCell(feet + facing * 0.8f) : cell;
+        Debug.Log($"Till cell={cell}  farmZone.HasTile={farmZone?.HasTile(fzCell)}  fzCell={fzCell}");
         if (ground && !ground.HasTile(cell)) return;
+        if (farmZone && !farmZone.HasTile(fzCell)) return;
         foreach (var b in blockers)
             if (b && b.HasTile(cell)) return;
 
