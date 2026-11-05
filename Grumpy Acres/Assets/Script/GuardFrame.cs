@@ -5,7 +5,7 @@ public class GuardFrame : MonoBehaviour
 {
     public static readonly List<GuardFrame> All = new();
 
-    public float maxHealth = 120f;
+    public float maxHealth = 80f;
     [Tooltip("Cho cowboy dung ben trong khung")]
     public Transform post;
     public SpriteRenderer back;
@@ -72,7 +72,7 @@ public class GuardFrame : MonoBehaviour
         var prefab = cowboyPrefabs[Mathf.Clamp(entry.tier, 0, cowboyPrefabs.Length - 1)];
         var c = Instantiate(prefab, post.position, Quaternion.identity);
         c.standAtPlace = false;
-        c.alwaysOnDuty = true;
+        c.alwaysOnDuty = false;
         c.guardPost = post;
         c.frame = this;
         c.rosterId = entry.id;

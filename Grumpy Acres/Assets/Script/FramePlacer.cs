@@ -30,11 +30,7 @@ public class FramePlacer : MonoBehaviour
     {
         get
         {
-            if (!GuardFrameStock.Prefab)
-            {
-                var spot = FindFirstObjectByType<TowerSpot>();
-                if (spot) GuardFrameStock.Prefab = spot.framePrefab;
-            }
+            if (!GuardFrameStock.Prefab) GuardFrameStock.Prefab = Resources.Load<GameObject>("GuardFrame");
             return GuardFrameStock.Prefab;
         }
     }

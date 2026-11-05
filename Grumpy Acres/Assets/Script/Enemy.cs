@@ -23,6 +23,11 @@ public class Enemy : MonoBehaviour
 
     public static readonly List<Enemy> Alive = new();
 
+    [Tooltip("Moi enemy dang danh cung muc tieu se day muc tieu do 'xa' them bay nhieu don vi khi chon, de enemy dan trai ra")]
+    public float loadPenalty = 4f;
+    object targetKey;
+    float retargetTimer;
+
     Rigidbody2D rb;
     Animator anim;
     SpriteRenderer sr;
@@ -77,10 +82,21 @@ public class Enemy : MonoBehaviour
                        ((Vector2)player.position - (Vector2)transform.position).magnitude <= playerAggroRange;
         bool hitPlayer = inRange && playerHealth.TryClaim(this);
         if (!hitPlayer && playerHealth) playerHealth.Release(this);
-        var cowboy = hitPlayer ? null : Cowboy.Nearest(transform.position);
+        retargetTimer -= Time.fixedDeltaTime;
+        if (!hitPlayer && (retargetTimer <= 0f || !KeyValid(targetKey)))
+        {
+            retargetTimer = 1f;
+            PickTarget();
+        }
         var crops = CropManager.Instance;
-        var frame = (hitPlayer || cowboy) ? null : GuardFrame.Nearest(transform.position);
-        bool hasPlot = !hitPlayer && !cowboy && !frame && crops && crops.soilTilemap && crops.TryGetNearestPlot(transform.position, out plotCell, out targetPos);
+        var cowboy = hitPlayer ? null : targetKey as Cowboy;
+        var frame = hitPlayer ? null : targetKey as GuardFrame;
+        bool hasPlot = !hitPlayer && targetKey is Vector3Int && crops && crops.soilTilemap;
+        if (hasPlot)
+        {
+            plotCell = (Vector3Int)targetKey;
+            targetPos = crops.soilTilemap.GetCellCenterWorld(plotCell);
+        }
         var structure = (hitPlayer || cowboy || frame || hasPlot) ? null : Structure.Current;
 
         if (hitPlayer) targetPos = player.position;
@@ -122,6 +138,52 @@ public class Enemy : MonoBehaviour
             else if (hasPlot) CropManager.Instance.DamagePlot(plotCell, attackDamage);
             else structure.TakeDamage(attackDamage);
         }
+    }
+
+    static bool KeyValid(object key)
+    {
+        switch (key)
+        {
+            case Cowboy c: return c && c.Targetable;
+            case GuardFrame f: return f && f.IsTargetable;
+            case Vector3Int cell: return CropManager.Instance && CropManager.Instance.HasPlot(cell);
+            default: return false;
+        }
+    }
+
+    int Load(object key)
+    {
+        int n = 0;
+        foreach (var e in Alive)
+            if (e != this && !e.IsDead && key.Equals(e.targetKey)) n++;
+        return n;
+    }
+
+    void PickTarget()
+    {
+        object best = null;
+        float bestScore = float.MaxValue;
+        Vector2 me = transform.position;
+
+        void Consider(object key, Vector2 pos)
+        {
+            float s = (pos - me).magnitude + Load(key) * loadPenalty - (key.Equals(targetKey) ? 2f : 0f);
+            if (s < bestScore) { bestScore = s; best = key; }
+        }
+
+        foreach (var c in Cowboy.Active)
+            if (c && c.Targetable) Consider(c, c.transform.position);
+
+        if (best == null)
+            foreach (var f in GuardFrame.All)
+                if (f && f.IsTargetable) Consider(f, f.transform.position);
+
+        var crops = CropManager.Instance;
+        if (best == null && crops && crops.soilTilemap)
+            foreach (var cell in crops.PlotCells)
+                Consider(cell, crops.soilTilemap.GetCellCenterWorld(cell));
+
+        targetKey = best;
     }
 
     Vector2 Steer(Vector2 goal)

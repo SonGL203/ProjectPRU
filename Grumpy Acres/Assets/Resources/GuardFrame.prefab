@@ -94,7 +94,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3fe55510409450f4d8d1672f86d2848c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GuardFrame
-  maxHealth: 120
+  maxHealth: 80
   post: {fileID: 2316269281625291702}
   back: {fileID: 663042359869071893}
   front: {fileID: 7375280305797970810}

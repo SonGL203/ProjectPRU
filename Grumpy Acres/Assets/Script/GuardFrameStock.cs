@@ -25,11 +25,7 @@ public static class GuardFrameStock
 
     static Sprite FrameIcon()
     {
-        if (!Prefab)
-        {
-            var spot = Object.FindFirstObjectByType<TowerSpot>();
-            if (spot) Prefab = spot.framePrefab;
-        }
+        if (!Prefab) Prefab = Resources.Load<GameObject>("GuardFrame");
         if (!Prefab) return null;
         var front = Prefab.transform.Find("Front");
         var sr = front ? front.GetComponent<SpriteRenderer>() : Prefab.GetComponentInChildren<SpriteRenderer>();

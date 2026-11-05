@@ -127,11 +127,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 719c4e93f2665594b83882a57dd563d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Cowboy
-  maxHealth: 90
+  maxHealth: 115
   deathDelay: 1
-  bulletDamage: 20
-  fireInterval: 0.6
-  shootRange: 7
+  bulletDamage: 25
+  fireInterval: 0.5
+  shootRange: 7.5
   bulletPrefab: {fileID: 0}
   muzzle: {fileID: 0}
   standAtPlace: 1

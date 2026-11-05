@@ -16,6 +16,8 @@ public class Cowboy : MonoBehaviour
 
     void Vanish() => gameObject.SetActive(false);
 
+    public static System.Collections.Generic.List<Cowboy> Active => all;
+
     public static Cowboy Nearest(Vector3 from)
     {
         Cowboy best = null;
@@ -118,7 +120,7 @@ public class Cowboy : MonoBehaviour
             edgePos = EdgePoint();
             if (duty)
             {
-                transform.position = edgePos;
+                transform.position = guardPost.position;
                 SetHidden(false);
             }
         }

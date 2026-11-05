@@ -15,6 +15,8 @@ public class DayNightCycle : MonoBehaviour
 
     float timer;
 
+    public event System.Action OnDusk;
+
     public static DayNightCycle Instance { get; private set; }
 
     float DayLength => dawnLength + dayHold + duskLength + nightHold;
@@ -33,6 +35,8 @@ public class DayNightCycle : MonoBehaviour
     {
         float prev = timer;
         timer = (timer + Time.deltaTime) % DayLength;
+        float duskAt = dawnLength + dayHold;
+        if (prev < duskAt && timer >= duskAt) OnDusk?.Invoke();
         if (timer < prev && GameManager.HasInstance) GameManager.Instance.NextDay();
 
         float t;

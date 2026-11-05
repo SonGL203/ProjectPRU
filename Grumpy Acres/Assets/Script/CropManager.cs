@@ -239,6 +239,10 @@ public class CropManager : MonoBehaviour
         }
     }
 
+    public System.Collections.Generic.IEnumerable<Vector3Int> PlotCells => plantedCrops.Keys;
+
+    public bool HasPlot(Vector3Int cell) => plantedCrops.ContainsKey(cell);
+
     public bool TryGetNearestPlot(Vector3 from, out Vector3Int cell, out Vector3 worldPos)
     {
         cell = default;

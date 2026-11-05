@@ -6,10 +6,9 @@ using UnityEngine;
 public static class GuardFrameSetupEditor
 {
     const string SpriteDir = "Assets/sprites/Tower";
-    const string FramePrefabPath = "Assets/Prefabs/GuardFrame.prefab";
+    const string FramePrefabPath = "Assets/Resources/GuardFrame.prefab";
 
     static readonly Vector3[] FramePositions = { new(13f, 14f, 0f), new(27f, 14f, 0f) };
-    static readonly Vector3[] SpotPositions = { new(8f, 12f, 0f), new(32f, 12f, 0f), new(20f, 20f, 0f) };
     static readonly Vector3 PortalPos = new(20f, 1.2f, 0f);
 
     [MenuItem("Tools/Farm/5. Setup Guard Frames")]
@@ -60,13 +59,10 @@ public static class GuardFrameSetupEditor
             f.transform.position = FramePositions[i];
         }
 
-        for (int i = 0; i < SpotPositions.Length; i++)
-            MakeSpot(root.transform, $"FrameSpot{i + 1}", SpotPositions[i], spotSprite, framePrefab);
-
         MakeMarketPortal(root.transform, spotSprite);
 
         EditorSceneManager.MarkSceneDirty(root.scene);
-        Debug.Log("Da dat 2 khung canh gac, 3 nen dat xay them va cua Cowboy Market. Ctrl+S de luu scene. Chay tiep menu 6. Build Cowboy Market.");
+        Debug.Log("Da dat 2 khung canh gac va cua Cowboy Market. Ctrl+S de luu scene. Chay tiep menu 6. Build Cowboy Market.");
     }
 
     static Sprite ImportSprite(string path)
@@ -125,26 +121,6 @@ public static class GuardFrameSetupEditor
         var prefab = PrefabUtility.SaveAsPrefabAsset(go, FramePrefabPath);
         Object.DestroyImmediate(go);
         return prefab;
-    }
-
-    static void MakeSpot(Transform parent, string name, Vector3 pos, Sprite sprite, GameObject framePrefab)
-    {
-        var go = new GameObject(name);
-        go.transform.SetParent(parent, false);
-        go.transform.position = pos;
-
-        var sr = go.AddComponent<SpriteRenderer>();
-        sr.sprite = sprite;
-        sr.sortingOrder = 4;
-
-        var col = go.AddComponent<BoxCollider2D>();
-        col.isTrigger = true;
-        col.size = new Vector2(3f, 2.5f);
-        col.offset = new Vector2(0f, 0.8f);
-
-        var spot = go.AddComponent<TowerSpot>();
-        spot.framePrefab = framePrefab;
-        spot.cost = 80;
     }
 
     static void MakeMarketPortal(Transform parent, Sprite sprite)

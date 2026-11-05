@@ -22,9 +22,9 @@ public static class CowboyAnimationBuilder
 
     static readonly Tier[] Tiers =
     {
-        new Tier { name = "Cowboy1", suffix = "",   interval = 1.2f, range = 5f, damage = 12f, health = 50f },
-        new Tier { name = "Cowboy2", suffix = " 1", interval = 0.9f, range = 6f, damage = 15f, health = 70f },
-        new Tier { name = "Cowboy3", suffix = " 2", interval = 0.6f, range = 7f, damage = 20f, health = 90f },
+        new Tier { name = "Cowboy1", suffix = "",   interval = 1.0f, range = 5.5f, damage = 15f, health = 65f },
+        new Tier { name = "Cowboy2", suffix = " 1", interval = 0.8f, range = 6.5f, damage = 19f, health = 90f },
+        new Tier { name = "Cowboy3", suffix = " 2", interval = 0.5f, range = 7.5f, damage = 25f, health = 115f },
     };
 
     [MenuItem("Tools/Farm/4. Build Cowboys")]
