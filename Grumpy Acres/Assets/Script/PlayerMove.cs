@@ -8,6 +8,12 @@ public class PlayerMove : MonoBehaviour
     public float speed = 4f;
     public float hoeTime = 0.4f;
 
+    [Header("Chem cuoc")]
+    [Tooltip("Sat thuong moi nhat chem cuoc len enemy (enemy 30 mau = 2 nhat, con tim 60 mau = 4 nhat)")]
+    public float hoeDamage = 15f;
+    public float hoeReach = 0.9f;
+    public float hoeRadius = 0.9f;
+
     [Header("Cuoc dat")]
     public Tilemap ground;
     public Tilemap soil;
@@ -29,6 +35,7 @@ public class PlayerMove : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
+        if (!GetComponent<PlayerHealth>()) gameObject.AddComponent<PlayerHealth>();
     }
 
     void Update()
@@ -51,7 +58,7 @@ public class PlayerMove : MonoBehaviour
 
         var mouse = Mouse.current;
         bool mouseTillPressed = false;
-        if (mouse != null && mouse.leftButton.wasPressedThisFrame)
+        if (mouse != null && mouse.leftButton.wasPressedThisFrame && !FramePlacer.Active)
         {
             if (UnityEngine.EventSystems.EventSystem.current == null || !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
             {
@@ -64,7 +71,6 @@ public class PlayerMove : MonoBehaviour
             var activeSlot = InventorySystem.Instance != null ? InventorySystem.Instance.GetSelected() : null;
             var activeItem = activeSlot != null ? activeSlot.item : null;
             
-            // Bat buoc phai cam Cuoc (Tool_Hoe) moi duoc phep cuoc dat!
             bool canTill = activeItem != null && activeItem.itemType == ItemType.Tool && activeItem.toolType == ToolType.Hoe;
 
             if (canTill)
@@ -89,14 +95,24 @@ public class PlayerMove : MonoBehaviour
         anim.Play(state, 0, 0f);
     }
 
-    // o dat ngay truoc chan nhan vat
+    void Slash()
+    {
+        Vector2 center = rb.position + facing * hoeReach;
+        foreach (var e in Enemy.Alive.ToArray())
+        {
+            if (!e || e.IsDead) continue;
+            if (((Vector2)e.transform.position - center).magnitude <= hoeRadius)
+                e.TakeDamage(hoeDamage);
+        }
+    }
+
     void Till()
     {
+        Slash();
         if (!soil || !soilTile) return;
         var feet = rb.position + new Vector2(0f, -0.4f);
         var cell = soil.WorldToCell(feet + facing * 0.8f);
         var fzCell = farmZone ? farmZone.WorldToCell(feet + facing * 0.8f) : cell;
-        Debug.Log($"Till cell={cell}  farmZone.HasTile={farmZone?.HasTile(fzCell)}  fzCell={fzCell}");
         if (ground && !ground.HasTile(cell)) return;
         if (farmZone && !farmZone.HasTile(fzCell)) return;
         foreach (var b in blockers)

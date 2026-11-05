@@ -23,6 +23,9 @@ public class CropManager : MonoBehaviour
     [Tooltip("Kich thuoc phong to hien thi cay trong o dat")]
     public float plantScale = 4f;
 
+    [Tooltip("Mau cua moi o dat dang trong cay khi bi enemy pha")]
+    public float plotMaxHealth = 30f;
+
     [Serializable]
     public class PlantedCrop
     {
@@ -31,6 +34,7 @@ public class CropManager : MonoBehaviour
         public float currentGrowthTime;
         public bool isWatered;
         public int currentStage;
+        public float health;
         public GameObject plantInstance;
         public SpriteRenderer spriteRenderer;
 
@@ -51,7 +55,6 @@ public class CropManager : MonoBehaviour
         }
         Instance = this;
 
-        // Tu dong tim Tilemap Soil neu chua gan
         if (soilTilemap == null)
         {
             var soilGO = GameObject.Find("Soil");
@@ -78,7 +81,6 @@ public class CropManager : MonoBehaviour
             if (crop.seedData == null || crop.seedData.growthStages == null || crop.seedData.growthStages.Length == 0) continue;
             if (crop.IsMature) continue;
 
-            // Cay lon cham hon neu chua tuoi nuoc (chi 20% toc do), tuoi nuoc thi lon 100% toc do
             float growthRate = crop.isWatered ? 1.0f : 0.2f;
             crop.currentGrowthTime += dt * growthRate;
 
@@ -100,11 +102,11 @@ public class CropManager : MonoBehaviour
         var mouse = Mouse.current;
         if (mouse == null) return;
 
-        // Khong tuong tac neu chuot dang tro tren giao dien UI (tranh click xuyen UI)
+        if (FramePlacer.Active) return;
+
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
             return;
 
-        // Click hoac giu chuot trai de rai hat / tuoi nuoc / thu hoach
         if (mouse.leftButton.isPressed)
         {
             Vector2 mouseScreen = mouse.position.ReadValue();
@@ -120,7 +122,6 @@ public class CropManager : MonoBehaviour
 
             Vector3Int cell = soilTilemap.WorldToCell(worldPos);
 
-            // Kiem tra khoang cach toi nguoi choi
             if (playerTransform == null)
             {
                 var p = GameObject.FindWithTag("Player");
@@ -133,28 +134,23 @@ public class CropManager : MonoBehaviour
                     return;
             }
 
-            // Lay vat pham dang cam tren Hotbar
             var activeSlot = InventorySystem.Instance != null ? InventorySystem.Instance.GetSelected() : null;
             var activeItem = activeSlot != null ? activeSlot.item : null;
 
-            // 1. Uu tien THU HOACH neu o do co cay da chin (chi can click chuot trai)
             if (mouse.leftButton.wasPressedThisFrame && plantedCrops.TryGetValue(cell, out var matureCrop) && matureCrop.IsMature)
             {
                 HarvestCrop(cell, matureCrop);
                 return;
             }
 
-            // 2. Neu o dat da cuoc
             if (soilTilemap.HasTile(cell))
             {
-                // A. Neu dang cam Binh tuoi nuoc (Watering Can) -> Tuoi nuoc
                 if (activeItem != null && activeItem.itemType == ItemType.Tool && activeItem.toolType == ToolType.WateringCan)
                 {
                     WaterSoil(cell);
                     return;
                 }
 
-                // B. Neu dang cam Hat giong (Seed) -> Rai hat
                 if (activeItem != null && activeItem.itemType == ItemType.Seed)
                 {
                     PlantSeed(cell, activeItem, activeSlot);
@@ -167,9 +163,8 @@ public class CropManager : MonoBehaviour
     public bool PlantSeed(Vector3Int cell, ItemData seedData, ItemSlot slot)
     {
         if (!soilTilemap.HasTile(cell)) return false;
-        if (plantedCrops.ContainsKey(cell)) return false; // Da co cay trong o nay
+        if (plantedCrops.ContainsKey(cell)) return false;
 
-        // Tru 1 hat trong kho do
         if (slot != null)
         {
             slot.amount--;
@@ -177,7 +172,6 @@ public class CropManager : MonoBehaviour
             InventorySystem.Instance.NotifyChanged();
         }
 
-        // Tao doi tuong cay
         var plantGO = new GameObject($"Crop_{cell.x}_{cell.y}");
         plantGO.transform.SetParent(transform, false);
 
@@ -186,7 +180,7 @@ public class CropManager : MonoBehaviour
         plantGO.transform.localScale = Vector3.one * plantScale;
 
         var sr = plantGO.AddComponent<SpriteRenderer>();
-        sr.sortingOrder = 5; // Hien tren lop mat dat
+        sr.sortingOrder = 5;
 
         var planted = new PlantedCrop
         {
@@ -195,6 +189,7 @@ public class CropManager : MonoBehaviour
             currentGrowthTime = 0f,
             isWatered = wateredCells.Contains(cell),
             currentStage = 0,
+            health = plotMaxHealth,
             plantInstance = plantGO,
             spriteRenderer = sr
         };
@@ -224,7 +219,6 @@ public class CropManager : MonoBehaviour
     {
         var yieldItem = crop.seedData.cropYield != null ? crop.seedData.cropYield : crop.seedData;
 
-        // Cho nong san vao Inventory (AddItem tra ve so luong con thua neu khong nhet het)
         int leftover = InventorySystem.Instance.AddItem(yieldItem, 1);
         if (leftover > 0)
         {
@@ -232,19 +226,59 @@ public class CropManager : MonoBehaviour
             return;
         }
 
-        // Xoa instance cay
         if (crop.plantInstance != null)
         {
             Destroy(crop.plantInstance);
         }
         plantedCrops.Remove(cell);
 
-        // Reset lai mau dat kho neu can
         wateredCells.Remove(cell);
         if (soilTilemap.HasTile(cell))
         {
             soilTilemap.SetColor(cell, drySoilColor);
         }
+    }
+
+    public bool TryGetNearestPlot(Vector3 from, out Vector3Int cell, out Vector3 worldPos)
+    {
+        cell = default;
+        worldPos = default;
+        float best = float.MaxValue;
+        bool found = false;
+
+        foreach (var kvp in plantedCrops)
+        {
+            Vector3 pos = soilTilemap.GetCellCenterWorld(kvp.Key);
+            float d = (pos - from).sqrMagnitude;
+            if (d >= best) continue;
+            best = d;
+            cell = kvp.Key;
+            worldPos = pos;
+            found = true;
+        }
+        return found;
+    }
+
+    public void DamagePlot(Vector3Int cell, float amount)
+    {
+        if (!plantedCrops.TryGetValue(cell, out var crop)) return;
+        crop.health -= amount;
+        if (crop.health > 0f) return;
+
+        if (crop.plantInstance != null) Destroy(crop.plantInstance);
+        plantedCrops.Remove(cell);
+        wateredCells.Remove(cell);
+        soilTilemap.SetTileFlags(cell, TileFlags.None);
+        soilTilemap.SetColor(cell, drySoilColor);
+    }
+
+    public void DestroyAllFarmland()
+    {
+        foreach (var crop in plantedCrops.Values)
+            if (crop.plantInstance != null) Destroy(crop.plantInstance);
+        plantedCrops.Clear();
+        wateredCells.Clear();
+        if (soilTilemap != null) soilTilemap.ClearAllTiles();
     }
 
     void UpdatePlantVisual(PlantedCrop crop)

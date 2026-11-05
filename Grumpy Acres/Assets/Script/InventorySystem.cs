@@ -46,12 +46,11 @@ public class InventorySystem : MonoBehaviour
 {
     public static InventorySystem Instance { get; private set; }
 
-    // Sprite Action_panel_1 co 10 o (phim 1-9 va phim 0)
     public const int HotbarSize = 10;
     public const int GridCols   = 5;
     public const int GridRows   = 4;
-    public const int GridSize   = GridCols * GridRows; // 20
-    public const int TotalSlots = HotbarSize + GridSize; // 10 + 20 = 30
+    public const int GridSize   = GridCols * GridRows;
+    public const int TotalSlots = HotbarSize + GridSize;
 
     [Header("Danh sach slot (0-9: Hotbar, 10-29: Inventory Grid)")]
     public ItemSlot[] slots = new ItemSlot[TotalSlots];
@@ -84,7 +83,6 @@ public class InventorySystem : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        // Khoi tao cac slot trong
         if (slots == null || slots.Length != TotalSlots)
             slots = new ItemSlot[TotalSlots];
 
@@ -97,7 +95,6 @@ public class InventorySystem : MonoBehaviour
 
     void Start()
     {
-        // Chi them vat pham neu nguoi dung chu dong them vao danh sach startingItems trong Inspector
         if (IsInventoryEmpty() && startingItems != null && startingItems.Count > 0)
         {
             foreach (var s in startingItems)
@@ -113,7 +110,6 @@ public class InventorySystem : MonoBehaviour
         var kb = UnityEngine.InputSystem.Keyboard.current;
         if (kb == null) return;
 
-        // Phim F1 de nhan full do test (Cuoc, Binh tuoi, Riu, Cuoc chim, Hat giong)
         if (kb.f1Key.wasPressedThisFrame)
         {
             GiveAllTestItems();
@@ -122,12 +118,6 @@ public class InventorySystem : MonoBehaviour
 
     public void GiveAllTestItems()
     {
-        // Sap xep uu tien ro rang:
-        // Slot 1: Cuoc (Tool_Hoe)
-        // Slot 2: Binh tuoi (Tool_WateringCan)
-        // Slot 3: Hat Ca chua (Seed_Tomato)
-        // Slot 4: Hat Ca rot (Seed_Carrot)
-        // Slot 5: Hat Lua mi (Seed_Wheat)
         ClearAll();
 
         AddItemByName("Tool_Hoe", 1);
@@ -139,8 +129,7 @@ public class InventorySystem : MonoBehaviour
         AddItemByName("Tool_Pickaxe", 1);
 
         NotifyChanged();
-        SelectHotbar(0); // Tu dong chon slot dau tien la Cuoc Dat
-        Debug.Log("<color=green>[Test]</color> Da nap do test theo thu tu: 1-Cuoc, 2-Binh tuoi, 3-Hat Ca chua, 4-Hat Ca rot, 5-Hat Lua mi!");
+        SelectHotbar(0);
     }
 
     void AddItemByName(string assetName, int count)
@@ -178,7 +167,6 @@ public class InventorySystem : MonoBehaviour
         return true;
     }
 
-    // --- Truy xuat slot ---
     public ItemSlot GetSlot(int index)
     {
         if (index < 0 || index >= TotalSlots) return null;
@@ -198,12 +186,10 @@ public class InventorySystem : MonoBehaviour
         OnHotbarSelected?.Invoke(selectedHotbar);
     }
 
-    // --- Them vat pham ---
     public int AddItem(ItemData item, int amount = 1)
     {
         if (item == null || amount <= 0) return amount;
 
-        // 1. Stack vao slot da co item cung loai
         if (item.IsStackable)
         {
             for (int i = 0; i < TotalSlots && amount > 0; i++)
@@ -219,7 +205,6 @@ public class InventorySystem : MonoBehaviour
             }
         }
 
-        // 2. Them vao slot trong
         for (int i = 0; i < TotalSlots && amount > 0; i++)
         {
             var s = slots[i];
@@ -233,10 +218,9 @@ public class InventorySystem : MonoBehaviour
         }
 
         NotifyChanged();
-        return amount; // Phan du neu full
+        return amount;
     }
 
-    // --- Xoa vat pham khoi slot ---
     public bool RemoveFromSlot(int slotIndex, int amount = 1)
     {
         var s = GetSlot(slotIndex);
@@ -249,7 +233,6 @@ public class InventorySystem : MonoBehaviour
         return true;
     }
 
-    // --- Hoan doi hoac hop nhat giua 2 slot (phuc vu sap xep Hotbar & Inventory) ---
     public void SwapOrMerge(int fromIndex, int toIndex)
     {
         if (fromIndex == toIndex) return;
@@ -258,13 +241,11 @@ public class InventorySystem : MonoBehaviour
         if (from == null || to == null) return;
         if (from.IsEmpty && to.IsEmpty) return;
 
-        // 1. Target trong -> chuyen toan bo
         if (to.IsEmpty)
         {
             to.CopyFrom(from);
             from.Clear();
         }
-        // 2. Cung loai item va stack duoc -> gop stack
         else if (from.item == to.item && to.item.IsStackable)
         {
             int space = to.item.maxStack - to.amount;
@@ -282,7 +263,6 @@ public class InventorySystem : MonoBehaviour
                 from.CopyFrom(temp);
             }
         }
-        // 3. Khac loai -> hoan doi (Swap)
         else
         {
             var temp = new ItemSlot(to.item, to.amount);
@@ -293,7 +273,6 @@ public class InventorySystem : MonoBehaviour
         NotifyChanged();
     }
 
-    // --- Tach nua stack (Right-click split) ---
     public void SplitStack(int fromIndex, int toIndex)
     {
         if (fromIndex == toIndex) return;
@@ -319,13 +298,11 @@ public class InventorySystem : MonoBehaviour
         }
     }
 
-    // --- Chuyen nhanh giua Hotbar va Grid (Shift + Click) ---
     public bool QuickTransfer(int fromIndex)
     {
         var from = GetSlot(fromIndex);
         if (from == null || from.IsEmpty) return false;
 
-        // Tu Hotbar -> chuyen vao Grid
         if (IsHotbarIndex(fromIndex))
         {
             for (int i = HotbarSize; i < TotalSlots; i++)
@@ -338,7 +315,6 @@ public class InventorySystem : MonoBehaviour
                 }
             }
         }
-        // Tu Grid -> chuyen vao Hotbar
         else if (IsGridIndex(fromIndex))
         {
             for (int i = 0; i < HotbarSize; i++)

@@ -5,7 +5,8 @@ public enum ItemType
     Tool,
     Seed,
     Crop,
-    Misc
+    Misc,
+    Placeable
 }
 
 public enum ToolType
