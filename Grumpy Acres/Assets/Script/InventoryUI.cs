@@ -515,6 +515,7 @@ public class InventoryUI : MonoBehaviour
         if (heldItemIcon != null && heldSlot.item != null)
         {
             heldItemIcon.sprite = heldSlot.item.icon;
+            heldItemIcon.color = heldSlot.item.iconColor;
             heldItemIcon.enabled = true;
 
             bool showAmt = heldSlot.item.IsStackable && heldSlot.amount > 1;

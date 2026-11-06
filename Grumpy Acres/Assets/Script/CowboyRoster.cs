@@ -12,6 +12,13 @@ public static class CowboyRoster
     static readonly List<Entry> entries = new();
     static int nextId = 1;
 
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetStatics()
+    {
+        entries.Clear();
+        nextId = 1;
+    }
+
     public static int Count => entries.Count;
 
     public static Entry Add(int tier)

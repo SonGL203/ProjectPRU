@@ -5,6 +5,9 @@ public class GuardFrame : MonoBehaviour
 {
     public static readonly List<GuardFrame> All = new();
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetStatics() => All.Clear();
+
     public float maxHealth = 80f;
     [Tooltip("Cho cowboy dung ben trong khung")]
     public Transform post;
@@ -37,6 +40,14 @@ public class GuardFrame : MonoBehaviour
     }
 
     public Vector3 ClosestPoint(Vector3 from) => fence ? (Vector3)fence.ClosestPoint(from) : transform.position;
+
+    public void ApplyKind(GuardFrameStock.Kind kind)
+    {
+        maxHealth = kind.maxHealth;
+        Health = maxHealth;
+        if (back) back.color = kind.tint;
+        if (front) front.color = kind.tint;
+    }
 
     void Awake()
     {

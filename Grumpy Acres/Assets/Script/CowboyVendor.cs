@@ -3,98 +3,98 @@ using UnityEngine;
 [RequireComponent(typeof(Collider2D))]
 public class CowboyVendor : MonoBehaviour
 {
-    public string displayName = "Cowboy";
     public int tier;
     public int cost = 50;
     public Cowboy cowboyPrefab;
 
+    [Header("Giao dien (thiet ke san trong scene, code chi bat / tat)")]
+    public InfoPanel panel;
+    [Tooltip("Nhan ten + gia tren quay: an khi player cham vao, hien lai khi roi di. De trong = tu tim object NameLabel gan nhat")]
+    public GameObject nameLabel;
+    [Tooltip("Thong bao: het cho trong chong canh")]
+    public AutoHide msgNoSlot;
+    [Tooltip("Thong bao: khong du vang")]
+    public AutoHide msgNoGold;
+    [Tooltip("Thong bao: thue thanh cong")]
+    public AutoHide msgHired;
+
     bool playerInside;
-    string message;
-    float messageUntil;
 
     void Reset() => GetComponent<Collider2D>().isTrigger = true;
 
+    void Start()
+    {
+        if (!nameLabel) nameLabel = FindNameLabel();
+        if (nameLabel) nameLabel.SetActive(true);
+        if (panel) panel.Hide();
+        HideMessages();
+    }
+
     void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.GetComponentInParent<PlayerMove>()) playerInside = true;
+        if (!other.GetComponentInParent<PlayerMove>()) return;
+        playerInside = true;
+        if (panel) panel.Show();
+        if (nameLabel) nameLabel.SetActive(false);
     }
 
     void OnTriggerExit2D(Collider2D other)
     {
-        if (other.GetComponentInParent<PlayerMove>()) playerInside = false;
+        if (!other.GetComponentInParent<PlayerMove>()) return;
+        playerInside = false;
+        if (panel) panel.Hide();
+        if (nameLabel) nameLabel.SetActive(true);
+        HideMessages();
     }
 
     void Update()
     {
         if (!playerInside) return;
         var kb = UnityEngine.InputSystem.Keyboard.current;
-        if (kb != null && kb.fKey.wasPressedThisFrame) TryHire();
+        if (kb != null && kb.fKey.wasPressedThisFrame)
+        {
+            Debug.Log("[CowboyVendor] Bam F tai quay tier " + tier);
+            TryHire();
+        }
     }
 
     public bool TryHire()
     {
         if (CowboyRoster.Count >= GuardFrame.All.Count)
         {
-            Say("Het cho! Hay xay them khung canh gac o nong trai.");
+            Debug.Log($"[CowboyVendor] Khong thue duoc: het cho. Da thue {CowboyRoster.Count}, so chong canh dang co {GuardFrame.All.Count}. Hay dat them chong canh.");
+            AutoHide.Flash(msgNoSlot);
             return false;
         }
 
         var wallet = PlayerWallet.Instance;
         if (!wallet || !wallet.TrySpend(cost))
         {
-            Say($"Khong du vang (can {cost}).");
+            Debug.Log($"[CowboyVendor] Khong thue duoc: khong du vang (can {cost}, co {(wallet ? wallet.gold : 0)}).");
+            AutoHide.Flash(msgNoGold);
             return false;
         }
 
         CowboyRoster.Add(tier);
-        Say($"Da thue {displayName}! Ve nong trai, cowboy se tu vao khung.");
+        Debug.Log($"[CowboyVendor] Da thue cowboy tier {tier}. Cho: {CowboyRoster.Count}/{GuardFrame.All.Count}");
+        AutoHide.Flash(msgHired);
         return true;
     }
 
-    void Say(string text)
+    GameObject FindNameLabel()
     {
-        message = text;
-        messageUntil = Time.time + 2.5f;
+        var parent = transform.parent;
+        if (!parent) return null;
+        foreach (Transform c in parent)
+            if (c.name == "NameLabel" && Mathf.Abs(c.localPosition.x - transform.localPosition.x) < 0.5f)
+                return c.gameObject;
+        return null;
     }
 
-    [TextArea(2, 4)]
-    public string recommend = "";
-
-    static float EnemyHealth(string prefabName)
+    void HideMessages()
     {
-        var sp = FindFirstObjectByType<WaveSpawner>();
-        if (!sp) return 0f;
-        int week = GameManager.HasInstance ? GameManager.Instance.week : 1;
-        float mult = 1f;
-        foreach (var r in sp.healthRules)
-            if (r.prefabName == prefabName) mult = r.multiplier;
-        return (sp.baseHealth + sp.healthPerWeek * (week - 1)) * mult;
-    }
-
-    void OnGUI()
-    {
-        string info = $"{displayName}  -  {cost} vang";
-        if (cowboyPrefab)
-        {
-            float dmg = cowboyPrefab.bulletDamage, rate = 1f / cowboyPrefab.fireInterval;
-            info += $"\nSat thuong {dmg:0} | {rate:0.0} phat/giay | Tam {cowboyPrefab.shootRange:0} | Mau {cowboyPrefab.maxHealth:0}";
-
-            float green = EnemyHealth("Enemy2"), purple = EnemyHealth("Enemy1");
-            if (green > 0f && purple > 0f)
-            {
-                int g = Mathf.CeilToInt(green / dmg), p = Mathf.CeilToInt(purple / dmg);
-                info += $"\nHa Enemy xanh: {g} phat ({g * cowboyPrefab.fireInterval:0.0}s) | Enemy tim: {p} phat ({p * cowboyPrefab.fireInterval:0.0}s)";
-            }
-        }
-        if (!string.IsNullOrEmpty(recommend)) info += "\nGoi y: " + recommend;
-
-        if (playerInside)
-        {
-            int gold = PlayerWallet.Instance ? PlayerWallet.Instance.gold : 0;
-            info += $"\n[F] Thue   (cho: {CowboyRoster.Count}/{GuardFrame.All.Count}, vang: {gold})";
-            if (Time.time < messageUntil) info += "\n" + message;
-        }
-
-        WorldPrompt.Draw(transform.position + Vector3.up * 2.6f, info, 250f);
+        if (msgNoSlot) msgNoSlot.gameObject.SetActive(false);
+        if (msgNoGold) msgNoGold.gameObject.SetActive(false);
+        if (msgHired) msgHired.gameObject.SetActive(false);
     }
 }

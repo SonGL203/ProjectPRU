@@ -10,6 +10,11 @@ public class MarketPortal : MonoBehaviour
     [Tooltip("Chu hien tren cua")]
     public string label = "";
 
+    [Tooltip("Nhan chu (object trong scene)")]
+    public WorldLabel labelObj;
+    [Tooltip("Bang canh bao khi con enemy, chua di cho duoc (tuy chon)")]
+    public GameObject warningObj;
+
     bool playerInside;
 
     void Reset() => GetComponent<Collider2D>().isTrigger = true;
@@ -35,14 +40,14 @@ public class MarketPortal : MonoBehaviour
         MarketTravel.Enter(back);
     }
 
-    void OnGUI()
+    void LateUpdate()
     {
-        if (toMarket && playerInside && Enemy.Alive.Count > 0)
+        bool warn = toMarket && playerInside && Enemy.Alive.Count > 0;
+        if (warningObj && warningObj.activeSelf != warn) warningObj.SetActive(warn);
+        if (labelObj)
         {
-            WorldPrompt.Draw(transform.position + Vector3.up * 1.6f, "Dang co enemy, chua di cho duoc!");
-            return;
+            bool show = !warn && toMarket != MarketTravel.InMarket;
+            if (labelObj.gameObject.activeSelf != show) labelObj.gameObject.SetActive(show);
         }
-        if (!string.IsNullOrEmpty(label) && toMarket != MarketTravel.InMarket)
-            WorldPrompt.Draw(transform.position + Vector3.up * 0.8f, label);
     }
 }

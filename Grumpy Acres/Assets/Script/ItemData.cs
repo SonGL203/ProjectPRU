@@ -25,6 +25,8 @@ public class ItemData : ScriptableObject
     public string id;
     public string itemName;
     public Sprite icon;
+    [Tooltip("Nhan mau len icon (trang = giu nguyen). Dung de phan biet cung 1 sprite, vd chong go / sat")]
+    public Color iconColor = Color.white;
     public ItemType itemType = ItemType.Misc;
     [TextArea(2, 4)]
     public string description;

@@ -23,6 +23,9 @@ public class Enemy : MonoBehaviour
 
     public static readonly List<Enemy> Alive = new();
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetStatics() => Alive.Clear();
+
     [Tooltip("Moi enemy dang danh cung muc tieu se day muc tieu do 'xa' them bay nhieu don vi khi chon, de enemy dan trai ra")]
     public float loadPenalty = 4f;
     object targetKey;

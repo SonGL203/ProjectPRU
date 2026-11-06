@@ -12,8 +12,7 @@ public class FramePlacer : MonoBehaviour
     static int lastActiveFrame = -1;
     GameObject ghost;
     SpriteRenderer[] ghostRenderers;
-    string hint;
-    float hintUntil;
+    string blocker;
 
     public static bool Active => instance && lastActiveFrame == Time.frameCount;
 
@@ -41,13 +40,15 @@ public class FramePlacer : MonoBehaviour
         var player = FindFirstObjectByType<PlayerMove>();
         var cam = Camera.main;
 
-        if (mouse == null || !player || !cam || !GuardFrameStock.IsSelected() || !Prefab)
+        if (mouse == null || !player || !cam || GuardFrameStock.Selected() == null || !Prefab)
         {
             HideGhost();
+            GameHud.ShowPlacing(false);
             return;
         }
 
         lastActiveFrame = Time.frameCount;
+        GameHud.ShowPlacing(true);
         if (!ghost) CreateGhost();
 
         Vector3 w = cam.ScreenToWorldPoint(mouse.position.ReadValue());
@@ -61,14 +62,21 @@ public class FramePlacer : MonoBehaviour
         bool overUi = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
         if (mouse.leftButton.wasPressedThisFrame && !overUi)
         {
-            if (ok && GuardFrameStock.UseSelected()) Instantiate(Prefab, pos, Quaternion.identity);
-            else if (!ok) Say("Khong dat duoc o day (qua xa hoac vuong vat can).");
+            var kind = GuardFrameStock.Selected();
+            if (ok && GuardFrameStock.UseSelected())
+            {
+                var placed = Instantiate(Prefab, pos, Quaternion.identity);
+                var gf = placed.GetComponent<GuardFrame>();
+                if (gf && kind != null) gf.ApplyKind(kind);
+            }
+            else if (!ok) { Debug.Log("Khong dat duoc khung: " + blocker); GameHud.Fail(); }
         }
     }
 
     bool CanPlace(Vector3 pos, Vector3 playerPos)
     {
-        if (((Vector2)pos - (Vector2)playerPos).magnitude > placeRange) return false;
+        blocker = null;
+        if (((Vector2)pos - (Vector2)playerPos).magnitude > placeRange) { blocker = "quá xa người chơi (> " + placeRange + ")"; return false; }
 
         var hits = Physics2D.OverlapBoxAll((Vector2)pos + footprintOffset, footprint, 0f);
         foreach (var h in hits)
@@ -76,6 +84,7 @@ public class FramePlacer : MonoBehaviour
             if (h.isTrigger) continue;
             if (h.GetComponentInParent<PlayerMove>() || h.GetComponentInParent<Enemy>() || h.GetComponentInParent<Cowboy>()) continue;
             if (ghost && h.transform.IsChildOf(ghost.transform)) continue;
+            blocker = "vướng: " + h.name;
             return false;
         }
         return true;
@@ -95,17 +104,4 @@ public class FramePlacer : MonoBehaviour
         ghost = null;
     }
 
-    void Say(string t)
-    {
-        hint = t;
-        hintUntil = Time.time + 2f;
-    }
-
-    void OnGUI()
-    {
-        if (!ghost) return;
-        string text = "Click trai de dat khung canh gac (xanh = dat duoc)";
-        if (Time.time < hintUntil) text += "\n" + hint;
-        GUI.Label(new Rect(12, 32, 700, 48), text);
-    }
 }

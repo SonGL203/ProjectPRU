@@ -61,6 +61,7 @@ public class SlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
             if (iconImage != null)
             {
                 iconImage.sprite = slot.item.icon;
+                iconImage.color = slot.item.iconColor;
                 iconImage.enabled = slot.item.icon != null;
             }
 

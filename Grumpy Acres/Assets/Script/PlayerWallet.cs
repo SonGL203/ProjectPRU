@@ -20,11 +20,6 @@ public class PlayerWallet : MonoBehaviour
         if (kb != null && kb.f2Key.wasPressedThisFrame) Add(100);
     }
 
-    void OnGUI()
-    {
-        GUI.Label(new Rect(12, 8, 300, 24), $"Vang: {gold}   (F2: +100 de test)");
-    }
-
     public void Add(int amount)
     {
         gold += amount;

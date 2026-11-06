@@ -5,6 +5,13 @@ public class Cowboy : MonoBehaviour
     static readonly System.Collections.Generic.List<Cowboy> all = new();
     static readonly System.Collections.Generic.List<Cowboy> everyone = new();
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetStatics()
+    {
+        all.Clear();
+        everyone.Clear();
+    }
+
     public static void RemoveAll()
     {
         foreach (var c in everyone.ToArray())
