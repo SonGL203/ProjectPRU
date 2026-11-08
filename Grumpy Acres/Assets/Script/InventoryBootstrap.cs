@@ -35,7 +35,14 @@ public static class InventoryBootstrap
             Object.DontDestroyOnLoad(cropGO);
         }
 
-        // 2.2 Kiem tra FishManager
+        // 2.2 Kiem tra WaterTilemapFishPond tren GameObject Water
+        var waterObj = GameObject.Find("Water");
+        if (waterObj != null && waterObj.GetComponent<WaterTilemapFishPond>() == null)
+        {
+            waterObj.AddComponent<WaterTilemapFishPond>();
+        }
+
+        // 2.2.1 Kiem tra FishManager
         if (FishManager.Instance == null && Object.FindFirstObjectByType<FishManager>() == null)
         {
             var fishMgrGO = new GameObject("FishManager", typeof(FishManager));

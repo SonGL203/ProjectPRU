@@ -32,6 +32,9 @@ public static class FishItemsDatabase
     public static Sprite FishNetSprite;
     public static Sprite BubbleSprite;
     public static Sprite PondSprite;
+    public static Sprite ShadowSprite;
+    public static Sprite HungerBubbleSprite;
+    public static Sprite RippleSprite;
 
     static bool initialized = false;
 
@@ -55,6 +58,9 @@ public static class FishItemsDatabase
         FishFoodSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/sprites/Fish/Item_FishFood.png");
         FishNetSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/sprites/Fish/Tool_FishNet.png");
         BubbleSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/sprites/Fish/Fx_WaterBubble.png");
+        ShadowSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/sprites/Fish/Fish_Shadow.png");
+        HungerBubbleSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/sprites/Fish/Fx_HungerBubble.png");
+        RippleSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/sprites/Fish/Fx_WaterRipple.png");
 
         var pondSprites = AssetDatabase.LoadAllAssetsAtPath("Assets/Tilemap/Generated/Sprites/pond.png");
         foreach (var s in pondSprites)
@@ -66,7 +72,7 @@ public static class FishItemsDatabase
 
     static void BuildItems()
     {
-        // 1. Carp
+        // 1. Cá Chép (Carp)
         CarpItem = ScriptableObject.CreateInstance<ItemData>();
         CarpItem.name = "Fish_Carp";
         CarpItem.id = "fish_carp";
@@ -88,8 +94,8 @@ public static class FishItemsDatabase
         CarpFryItem.sellPrice = 8;
         CarpFryItem.icon = CarpFrySprite;
         CarpFryItem.fishYield = CarpItem;
-        CarpFryItem.growthSeconds = 25f;
-        CarpFryItem.description = "Cá chép con. Thả vào ao nước và cho ăn để cá lớn nhanh.";
+        CarpFryItem.growthSeconds = 300f; // 5 phút
+        CarpFryItem.description = "Cá chép con. Thả vào hồ nước tạo bóng mờ bơi lội, cứ 5 phút đói một lần.";
 
         CarpData = ScriptableObject.CreateInstance<FishData>();
         CarpData.name = "Data_Carp";
@@ -97,17 +103,18 @@ public static class FishItemsDatabase
         CarpData.speciesName = "Cá Chép";
         CarpData.fryItem = CarpFryItem;
         CarpData.adultItem = CarpItem;
-        CarpData.baseGrowthSeconds = 25f;
-        CarpData.fedGrowthSpeedMultiplier = 2.5f;
-        CarpData.fullStomachDuration = 20f;
-        CarpData.swimSpeed = 1.3f;
+        CarpData.growthDurationMinutes = 5.0f; // 5 phút để lớn
+        CarpData.hungerIntervalMinutes = 5.0f; // Cứ 5 phút là đói
+        CarpData.fedGrowthSpeedMultiplier = 2.0f;
+        CarpData.swimSpeed = 1.25f;
         CarpData.frySprite = CarpFrySprite;
         CarpData.adultSprite = CarpSprite;
-        CarpData.tint = Color.white;
+        CarpData.shadowSprite = ShadowSprite;
+        CarpData.shadowColor = new Color(0.08f, 0.2f, 0.35f, 0.65f);
         CarpData.fryBuyPrice = 15;
         CarpData.adultSellPrice = 45;
 
-        // 2. Goldfish
+        // 2. Cá Vàng (Goldfish)
         GoldfishItem = ScriptableObject.CreateInstance<ItemData>();
         GoldfishItem.name = "Fish_Goldfish";
         GoldfishItem.id = "fish_goldfish";
@@ -129,8 +136,8 @@ public static class FishItemsDatabase
         GoldfishFryItem.sellPrice = 12;
         GoldfishFryItem.icon = GoldfishFrySprite;
         GoldfishFryItem.fishYield = GoldfishItem;
-        GoldfishFryItem.growthSeconds = 35f;
-        GoldfishFryItem.description = "Cá vàng con bơi lội duyên dáng. Thả xuống ao để nuôi.";
+        GoldfishFryItem.growthSeconds = 240f; // 4 phút
+        GoldfishFryItem.description = "Cá vàng con bơi lội duyên dáng. Cứ 4 phút đói một lần.";
 
         GoldfishData = ScriptableObject.CreateInstance<FishData>();
         GoldfishData.name = "Data_Goldfish";
@@ -138,17 +145,18 @@ public static class FishItemsDatabase
         GoldfishData.speciesName = "Cá Vàng";
         GoldfishData.fryItem = GoldfishFryItem;
         GoldfishData.adultItem = GoldfishItem;
-        GoldfishData.baseGrowthSeconds = 35f;
-        GoldfishData.fedGrowthSpeedMultiplier = 2.5f;
-        GoldfishData.fullStomachDuration = 22f;
+        GoldfishData.growthDurationMinutes = 4.0f; // 4 phút để lớn
+        GoldfishData.hungerIntervalMinutes = 4.0f; // Cứ 4 phút là đói
+        GoldfishData.fedGrowthSpeedMultiplier = 2.0f;
         GoldfishData.swimSpeed = 1.1f;
         GoldfishData.frySprite = GoldfishFrySprite;
         GoldfishData.adultSprite = GoldfishSprite;
-        GoldfishData.tint = Color.white;
+        GoldfishData.shadowSprite = ShadowSprite;
+        GoldfishData.shadowColor = new Color(0.12f, 0.18f, 0.32f, 0.65f);
         GoldfishData.fryBuyPrice = 25;
         GoldfishData.adultSellPrice = 80;
 
-        // 3. Salmon
+        // 3. Cá Hồi (Salmon)
         SalmonItem = ScriptableObject.CreateInstance<ItemData>();
         SalmonItem.name = "Fish_Salmon";
         SalmonItem.id = "fish_salmon";
@@ -170,8 +178,8 @@ public static class FishItemsDatabase
         SalmonFryItem.sellPrice = 25;
         SalmonFryItem.icon = SalmonFrySprite;
         SalmonFryItem.fishYield = SalmonItem;
-        SalmonFryItem.growthSeconds = 50f;
-        SalmonFryItem.description = "Cá hồi giống bơi khỏe. Nuôi lớn đem lại lợi nhuận khổng lồ.";
+        SalmonFryItem.growthSeconds = 390f; // 6.5 phút
+        SalmonFryItem.description = "Cá hồi giống bơi khỏe. Cứ 6.5 phút đói một lần, lớn bán giá cực cao.";
 
         SalmonData = ScriptableObject.CreateInstance<FishData>();
         SalmonData.name = "Data_Salmon";
@@ -179,17 +187,18 @@ public static class FishItemsDatabase
         SalmonData.speciesName = "Cá Hồi";
         SalmonData.fryItem = SalmonFryItem;
         SalmonData.adultItem = SalmonItem;
-        SalmonData.baseGrowthSeconds = 50f;
-        SalmonData.fedGrowthSpeedMultiplier = 2.5f;
-        SalmonData.fullStomachDuration = 25f;
-        SalmonData.swimSpeed = 1.5f;
+        SalmonData.growthDurationMinutes = 6.5f; // 6.5 phút để lớn
+        SalmonData.hungerIntervalMinutes = 6.5f; // Cứ 6.5 phút là đói
+        SalmonData.fedGrowthSpeedMultiplier = 2.0f;
+        SalmonData.swimSpeed = 1.45f;
         SalmonData.frySprite = SalmonFrySprite;
         SalmonData.adultSprite = SalmonSprite;
-        SalmonData.tint = Color.white;
+        SalmonData.shadowSprite = ShadowSprite;
+        SalmonData.shadowColor = new Color(0.06f, 0.22f, 0.38f, 0.7f);
         SalmonData.fryBuyPrice = 50;
         SalmonData.adultSellPrice = 180;
 
-        // 4. Fish Food
+        // 4. Thức Ăn Cho Cá
         FishFoodItem = ScriptableObject.CreateInstance<ItemData>();
         FishFoodItem.name = "Item_FishFood";
         FishFoodItem.id = "fish_food";
@@ -199,9 +208,9 @@ public static class FishItemsDatabase
         FishFoodItem.buyPrice = 5;
         FishFoodItem.sellPrice = 2;
         FishFoodItem.icon = FishFoodSprite;
-        FishFoodItem.description = "Thức ăn dinh dưỡng dạng hạt. Rải xuống ao giúp cá lớn nhanh gấp 2.5 lần.";
+        FishFoodItem.description = "Thức ăn dinh dưỡng dạng hạt. Rải xuống ao giúp cá no bụng và lớn nhanh.";
 
-        // 5. Fish Net
+        // 5. Vợt Bắt Cá
         FishNetItem = ScriptableObject.CreateInstance<ItemData>();
         FishNetItem.name = "Tool_FishNet";
         FishNetItem.id = "tool_fishnet";
@@ -212,9 +221,9 @@ public static class FishItemsDatabase
         FishNetItem.buyPrice = 30;
         FishNetItem.sellPrice = 15;
         FishNetItem.icon = FishNetSprite;
-        FishNetItem.description = "Vợt lưới thủ công dùng để vớt cá trưởng thành từ ao.";
+        FishNetItem.description = "Vợt lưới dùng để vớt bóng cá đã trưởng thành từ hồ nước lên túi đồ.";
 
-        // 6. Fish Pond (Placeable)
+        // 6. Bể Nuôi Cá (Placeable)
         FishPondItem = ScriptableObject.CreateInstance<ItemData>();
         FishPondItem.name = "Item_FishPond";
         FishPondItem.id = "item_fish_pond";

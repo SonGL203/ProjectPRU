@@ -7,42 +7,43 @@ public class FishAgent : MonoBehaviour
 {
     public static readonly List<FishAgent> AllFish = new();
 
-    [Header("Du lieu ca")]
+    [Header("Dữ liệu Cá")]
     public FishData fishData;
 
-    [Header("Trang thai")]
+    [Header("Sinh trưởng & Đói bụng")]
     public float currentGrowthTime;
-    public float hungerTimer; // > 0: dang no, = 0: dang doi
-    public float breedTimer;
+    public float hungerTimer; // Đếm ngược giây đói (Mặc định 5 phút = 300s)
     public bool isMature;
 
-    [Header("Boi loi")]
+    [Header("Bơi lội")]
     public Vector3 targetPos;
     public float changeTargetCooldown;
     public Bounds movementBounds;
     public bool hasCustomBounds;
 
     // Components
-    SpriteRenderer spriteRenderer;
+    SpriteRenderer shadowRenderer;
     Transform visualTransform;
     Tilemap waterTilemap;
 
-    // Visual effects
-    GameObject readyIndicator;
-    GameObject fedIndicator;
-    float fedIndicatorTimer;
+    // Visual indicators
+    GameObject hungerIndicator;
+    GameObject matureSparkleIndicator;
+
+    float rippleTimer = 0f;
 
     public float GrowthProgress
     {
         get
         {
-            if (fishData == null || fishData.baseGrowthSeconds <= 0f) return 1f;
-            return Mathf.Clamp01(currentGrowthTime / fishData.baseGrowthSeconds);
+            if (fishData == null || fishData.BaseGrowthSeconds <= 0f) return 1f;
+            return Mathf.Clamp01(currentGrowthTime / fishData.BaseGrowthSeconds);
         }
     }
 
-    public bool IsMature => GrowthProgress >= 1f;
-    public bool IsFed => hungerTimer > 0f;
+    public bool IsMature => isMature || GrowthProgress >= 1f;
+    public bool IsHungry => hungerTimer <= 0f;
+    public bool IsFed => !IsHungry;
 
     void Awake()
     {
@@ -56,14 +57,13 @@ public class FishAgent : MonoBehaviour
             visualTransform = visGO.transform;
         }
 
-        spriteRenderer = visualTransform.GetComponent<SpriteRenderer>();
-        if (!spriteRenderer)
+        shadowRenderer = visualTransform.GetComponent<SpriteRenderer>();
+        if (!shadowRenderer)
         {
-            spriteRenderer = visualTransform.gameObject.AddComponent<SpriteRenderer>();
-            spriteRenderer.sortingOrder = 4; // Bơi duoi mat nuoc/tren nen nuoc
+            shadowRenderer = visualTransform.gameObject.AddComponent<SpriteRenderer>();
+            shadowRenderer.sortingOrder = 3; // Nằm ngay trên nền nước (Water Tilemap = 2)
         }
 
-        // Add 2D collider for mouse picking
         var col = GetComponent<CircleCollider2D>();
         if (!col)
         {
@@ -75,23 +75,6 @@ public class FishAgent : MonoBehaviour
         CreateIndicators();
     }
 
-    void Start()
-    {
-        if (FishManager.Instance != null && FishManager.Instance.waterTilemap != null)
-        {
-            waterTilemap = FishManager.Instance.waterTilemap;
-        }
-        else
-        {
-            var waterGO = GameObject.Find("Water");
-            if (waterGO) waterTilemap = waterGO.GetComponent<Tilemap>();
-        }
-
-        targetPos = transform.position;
-        breedTimer = fishData != null ? fishData.breedCooldown : 40f;
-        UpdateVisuals();
-    }
-
     void OnDestroy()
     {
         AllFish.Remove(this);
@@ -99,46 +82,57 @@ public class FishAgent : MonoBehaviour
 
     void CreateIndicators()
     {
-        // Ready to harvest sparkle indicator
-        readyIndicator = new GameObject("ReadyIndicator");
-        readyIndicator.transform.SetParent(transform, false);
-        readyIndicator.transform.localPosition = new Vector3(0f, 0.6f, 0f);
-        var readySr = readyIndicator.AddComponent<SpriteRenderer>();
-        readySr.sortingOrder = 8;
-        readySr.color = new Color(1f, 0.95f, 0.2f, 0.9f);
+        // 1. Hunger bubble indicator (Fx_HungerBubble)
+        hungerIndicator = new GameObject("HungerIndicator");
+        hungerIndicator.transform.SetParent(transform, false);
+        hungerIndicator.transform.localPosition = new Vector3(0f, 0.6f, 0f);
+        var hSr = hungerIndicator.AddComponent<SpriteRenderer>();
+        hSr.sortingOrder = 8;
+        if (FishItemsDatabase.HungerBubbleSprite != null)
+            hSr.sprite = FishItemsDatabase.HungerBubbleSprite;
+        hungerIndicator.SetActive(false);
 
-        // Load bubble or star sprite
-        if (FishManager.Instance != null && FishManager.Instance.bubbleSprite != null)
-        {
-            readySr.sprite = FishManager.Instance.bubbleSprite;
-        }
-        readyIndicator.SetActive(false);
-
-        // Fed heart/happy bubble indicator
-        fedIndicator = new GameObject("FedIndicator");
-        fedIndicator.transform.SetParent(transform, false);
-        fedIndicator.transform.localPosition = new Vector3(0f, 0.5f, 0f);
-        var fedSr = fedIndicator.AddComponent<SpriteRenderer>();
-        fedSr.sortingOrder = 8;
-        fedSr.color = new Color(0.3f, 1f, 0.5f, 0.9f);
-        if (FishManager.Instance != null && FishManager.Instance.bubbleSprite != null)
-        {
-            fedSr.sprite = FishManager.Instance.bubbleSprite;
-        }
-        fedIndicator.SetActive(false);
+        // 2. Mature harvest sparkle indicator
+        matureSparkleIndicator = new GameObject("MatureSparkle");
+        matureSparkleIndicator.transform.SetParent(transform, false);
+        matureSparkleIndicator.transform.localPosition = new Vector3(0f, 0.7f, 0f);
+        var mSr = matureSparkleIndicator.AddComponent<SpriteRenderer>();
+        mSr.sortingOrder = 8;
+        mSr.color = new Color(1f, 0.95f, 0.3f, 0.9f);
+        if (FishItemsDatabase.BubbleSprite != null)
+            mSr.sprite = FishItemsDatabase.BubbleSprite;
+        matureSparkleIndicator.SetActive(false);
     }
 
-    public void Init(FishData data, Vector3 startPosition, Tilemap waterMap = null)
+    public void Init(FishData data, Vector3 startPos, Tilemap waterMap = null)
     {
         fishData = data;
-        transform.position = startPosition;
-        targetPos = startPosition;
+        transform.position = startPos;
+        targetPos = startPos;
         if (waterMap != null) waterTilemap = waterMap;
 
         currentGrowthTime = 0f;
-        hungerTimer = 10f; // Vừa thả xuống ao còn no 10s
+        // Bắt đầu với no bụng đầy đủ theo cài đặt loài cá (Mặc định 5 phút = 300s)
+        hungerTimer = (fishData != null) ? fishData.HungerSeconds : 300f;
         isMature = false;
 
+        UpdateVisuals();
+    }
+
+    void Start()
+    {
+        if (!waterTilemap)
+        {
+            if (WaterTilemapFishPond.Instance != null && WaterTilemapFishPond.Instance.waterTilemap != null)
+                waterTilemap = WaterTilemapFishPond.Instance.waterTilemap;
+            else
+            {
+                var wGO = GameObject.Find("Water");
+                if (wGO) waterTilemap = wGO.GetComponent<Tilemap>();
+            }
+        }
+
+        targetPos = transform.position;
         UpdateVisuals();
     }
 
@@ -147,7 +141,6 @@ public class FishAgent : MonoBehaviour
         float dt = Time.deltaTime;
         UpdateGrowth(dt);
         UpdateSwimming(dt);
-        UpdateBreeding(dt);
         UpdateVisualAnimation(dt);
     }
 
@@ -155,80 +148,80 @@ public class FishAgent : MonoBehaviour
     {
         if (fishData == null) return;
 
-        // Hunger countdown
+        // Đếm ngược thời gian đói (cứ 5 phút là đói)
         if (hungerTimer > 0f)
         {
             hungerTimer = Mathf.Max(0f, hungerTimer - dt);
         }
 
+        // Tăng trưởng: Nếu no bụng thì lớn nhanh, nếu đói thì ngừng lớn
         if (!isMature)
         {
-            float rate = IsFed ? fishData.fedGrowthSpeedMultiplier : 0.4f;
-            currentGrowthTime += dt * rate;
-
-            if (currentGrowthTime >= fishData.baseGrowthSeconds)
+            if (!IsHungry)
             {
-                currentGrowthTime = fishData.baseGrowthSeconds;
-                isMature = true;
-                OnMatured();
-            }
-
-            UpdateVisuals();
-        }
-
-        // Handle fed indicator flash
-        if (fedIndicatorTimer > 0f)
-        {
-            fedIndicatorTimer -= dt;
-            if (fedIndicator)
-            {
-                fedIndicator.SetActive(true);
-                float scale = 0.5f + Mathf.Sin(fedIndicatorTimer * 10f) * 0.1f;
-                fedIndicator.transform.localScale = Vector3.one * scale;
+                currentGrowthTime += dt * fishData.fedGrowthSpeedMultiplier;
+                if (currentGrowthTime >= fishData.BaseGrowthSeconds)
+                {
+                    currentGrowthTime = fishData.BaseGrowthSeconds;
+                    isMature = true;
+                    OnMatured();
+                }
             }
         }
-        else if (fedIndicator && fedIndicator.activeSelf)
+
+        // Cập nhật hiển thị icon đói
+        if (hungerIndicator)
         {
-            fedIndicator.SetActive(false);
+            bool showHunger = IsHungry;
+            if (hungerIndicator.activeSelf != showHunger)
+                hungerIndicator.SetActive(showHunger);
+
+            if (showHunger)
+            {
+                // Nhấp nhô nhẹ trên mặt hồ
+                float bob = Mathf.Sin(Time.time * 4f) * 0.08f;
+                hungerIndicator.transform.localPosition = new Vector3(0f, 0.6f + bob, 0f);
+            }
         }
 
-        // Ready indicator pulse
-        if (readyIndicator)
+        // Cập nhật hiệu ứng cá trưởng thành
+        if (matureSparkleIndicator)
         {
-            if (isMature)
+            if (IsMature)
             {
-                readyIndicator.SetActive(true);
-                float pulse = 0.6f + Mathf.PingPong(Time.time * 2f, 0.25f);
-                readyIndicator.transform.localScale = Vector3.one * pulse;
+                if (!matureSparkleIndicator.activeSelf) matureSparkleIndicator.SetActive(true);
+                float pulse = 0.6f + Mathf.PingPong(Time.time * 2f, 0.3f);
+                matureSparkleIndicator.transform.localScale = Vector3.one * pulse;
             }
-            else
+            else if (matureSparkleIndicator.activeSelf)
             {
-                readyIndicator.SetActive(false);
+                matureSparkleIndicator.SetActive(false);
             }
         }
     }
 
     void OnMatured()
     {
-        UpdateVisuals();
-        if (FishManager.Instance != null)
+        if (WaterTilemapFishPond.Instance != null)
         {
-            FishManager.Instance.SpawnSplash(transform.position, 4);
+            WaterTilemapFishPond.Instance.SpawnSplash(transform.position, 5);
+            WaterTilemapFishPond.Instance.SpawnRipple(transform.position);
+            WaterTilemapFishPond.Instance.ShowFloatingMessage(transform.position + Vector3.up * 0.5f, $"★ {fishData.speciesName} ĐÃ LỚN! (Bán được {fishData.adultSellPrice}v)", Color.yellow);
         }
     }
 
     void UpdateSwimming(float dt)
     {
         float speed = fishData != null ? fishData.swimSpeed : 1.2f;
+        if (IsHungry) speed *= 0.65f; // Cá đói bơi lờ đờ hơn
 
-        // Check if there is fish food nearby
+        // Tìm thức ăn cho cá gần nhất
         var food = FishFoodPellet.FindNearest(transform.position, 4.5f);
         if (food != null)
         {
             targetPos = food.transform.position;
-            speed *= 1.4f; // Boi nhanh toi moi
+            speed *= 1.5f;
 
-            // Check if reached food
             if (Vector2.Distance(transform.position, food.transform.position) < 0.35f)
             {
                 EatFood(food);
@@ -236,7 +229,6 @@ public class FishAgent : MonoBehaviour
         }
         else
         {
-            // Normal wander
             changeTargetCooldown -= dt;
             if (changeTargetCooldown <= 0f || Vector2.Distance(transform.position, targetPos) < 0.2f)
             {
@@ -244,7 +236,7 @@ public class FishAgent : MonoBehaviour
             }
         }
 
-        // Move towards targetPos
+        // Di chuyển bóng mờ về phía đích
         Vector3 moveDir = (targetPos - transform.position);
         if (moveDir.sqrMagnitude > 0.001f)
         {
@@ -260,40 +252,52 @@ public class FishAgent : MonoBehaviour
                 PickNewWanderTarget();
             }
 
-            // Flip sprite according to swim direction
-            if (Mathf.Abs(moveDir.x) > 0.05f && visualTransform != null)
+            // Lật hướng bơi theo chiều di chuyển
+            if (Mathf.Abs(moveDir.x) > 0.03f && visualTransform != null)
             {
-                bool flip = moveDir.x > 0f; // Quay phai hay trai
-                visualTransform.localScale = new Vector3(flip ? -Mathf.Abs(visualTransform.localScale.x) : Mathf.Abs(visualTransform.localScale.x), visualTransform.localScale.y, 1f);
+                bool flip = moveDir.x > 0f;
+                visualTransform.localScale = new Vector3(
+                    flip ? -Mathf.Abs(visualTransform.localScale.x) : Mathf.Abs(visualTransform.localScale.x),
+                    visualTransform.localScale.y,
+                    1f);
+            }
+
+            // Thỉnh thoảng tạo vòng sóng nước khi bóng cá bơi
+            rippleTimer += dt;
+            if (rippleTimer > 2.5f)
+            {
+                rippleTimer = 0f;
+                if (WaterTilemapFishPond.Instance != null)
+                {
+                    WaterTilemapFishPond.Instance.SpawnRipple(transform.position);
+                }
             }
         }
     }
 
     public void EatFood(FishFoodPellet food)
     {
-        if (food != null)
-        {
-            Destroy(food.gameObject);
-        }
+        if (food != null) Destroy(food.gameObject);
 
-        hungerTimer = fishData != null ? fishData.fullStomachDuration : 25f;
-        fedIndicatorTimer = 2.5f;
+        // Reset thời gian no bụng về 5 phút (hoặc theo loài cá)
+        hungerTimer = fishData != null ? fishData.HungerSeconds : 300f;
 
-        if (FishManager.Instance != null)
+        if (WaterTilemapFishPond.Instance != null)
         {
-            FishManager.Instance.SpawnSplash(transform.position, 3);
-            FishManager.Instance.ShowFloatingMessage(transform.position + Vector3.up * 0.4f, "No bụng! ✨", new Color(0.2f, 0.9f, 0.4f));
+            WaterTilemapFishPond.Instance.SpawnSplash(transform.position, 3);
+            WaterTilemapFishPond.Instance.SpawnRipple(transform.position);
+            int minutes = fishData != null ? Mathf.RoundToInt(fishData.hungerIntervalMinutes) : 5;
+            WaterTilemapFishPond.Instance.ShowFloatingMessage(transform.position + Vector3.up * 0.4f, $"No bụng ({minutes} phút)! ✨", new Color(0.2f, 0.95f, 0.4f));
         }
     }
 
     void PickNewWanderTarget()
     {
-        changeTargetCooldown = UnityEngine.Random.Range(2f, 4.5f);
+        changeTargetCooldown = UnityEngine.Random.Range(2.5f, 5.0f);
 
-        // Try random positions within radius
-        for (int attempt = 0; attempt < 8; attempt++)
+        for (int attempt = 0; attempt < 10; attempt++)
         {
-            Vector2 randOffset = UnityEngine.Random.insideUnitCircle * UnityEngine.Random.Range(1.2f, 3.5f);
+            Vector2 randOffset = UnityEngine.Random.insideUnitCircle * UnityEngine.Random.Range(1.2f, 3.8f);
             Vector3 test = transform.position + new Vector3(randOffset.x, randOffset.y, 0f);
 
             if (IsPositionValid(test))
@@ -320,71 +324,44 @@ public class FishAgent : MonoBehaviour
         return true;
     }
 
-    void UpdateBreeding(float dt)
-    {
-        if (!isMature || !IsFed || fishData == null || !fishData.canBreed) return;
-
-        breedTimer -= dt;
-        if (breedTimer <= 0f)
-        {
-            breedTimer = fishData.breedCooldown;
-
-            // Search for another mature fed fish of same species nearby
-            for (int i = 0; i < AllFish.Count; i++)
-            {
-                var other = AllFish[i];
-                if (other == this || !other || other.fishData != fishData) continue;
-                if (!other.isMature || !other.IsFed) continue;
-
-                if (Vector2.Distance(transform.position, other.transform.position) < 1.5f)
-                {
-                    // Breed new fry!
-                    Vector3 babyPos = (transform.position + other.transform.position) * 0.5f;
-                    if (FishManager.Instance != null)
-                    {
-                        FishManager.Instance.SpawnFish(fishData, babyPos, waterTilemap);
-                        FishManager.Instance.ShowFloatingMessage(babyPos + Vector3.up * 0.5f, "❤️ Cá sinh sản!", new Color(1f, 0.4f, 0.7f));
-                    }
-                    break;
-                }
-            }
-        }
-    }
-
     void UpdateVisualAnimation(float dt)
     {
         if (!visualTransform) return;
 
-        // Fish swimming waggle motion (sine wave rotation)
-        float wiggle = Mathf.Sin(Time.time * 8f) * 6f;
+        // Vẫy đuôi cá hình sin (Wiggle animation)
+        float wiggle = Mathf.Sin(Time.time * 7f) * 7.5f;
         visualTransform.localRotation = Quaternion.Euler(0f, 0f, wiggle);
 
-        // Gentle breathing scale
-        float baseScale = Mathf.Lerp(0.55f, 1.15f, GrowthProgress);
-        float breathe = 1f + Mathf.Sin(Time.time * 4f) * 0.04f;
+        // Kích thước bóng mờ tăng dần theo độ lớn (từ 0.55f lên 1.25f)
+        float baseScale = Mathf.Lerp(0.55f, 1.25f, GrowthProgress);
+
+        // Hiệu ứng bơi lặn nông sâu (dao động kích thước nhẹ)
+        float depthBreath = 1f + Mathf.Sin(Time.time * 3f) * 0.04f;
         float curXSign = Mathf.Sign(visualTransform.localScale.x);
-        visualTransform.localScale = new Vector3(curXSign * baseScale * breathe, baseScale, 1f);
+        visualTransform.localScale = new Vector3(curXSign * baseScale * depthBreath, baseScale, 1f);
     }
 
     public void UpdateVisuals()
     {
-        if (!spriteRenderer || fishData == null) return;
+        if (!shadowRenderer || fishData == null) return;
 
-        if (isMature && fishData.adultSprite != null)
+        // Gán sprite bóng mờ (Fish_Shadow)
+        if (FishItemsDatabase.ShadowSprite != null)
         {
-            spriteRenderer.sprite = fishData.adultSprite;
+            shadowRenderer.sprite = FishItemsDatabase.ShadowSprite;
         }
-        else if (fishData.frySprite != null)
+        else if (fishData.shadowSprite != null)
         {
-            spriteRenderer.sprite = fishData.frySprite;
+            shadowRenderer.sprite = fishData.shadowSprite;
         }
 
-        spriteRenderer.color = fishData.tint;
+        // Màu bóng mờ dưới hồ (nước xanh thẫm bán trong suốt)
+        shadowRenderer.color = fishData.shadowColor;
     }
 
     public bool Harvest()
     {
-        if (!isMature) return false;
+        if (!IsMature) return false;
 
         var yieldItem = (fishData != null && fishData.adultItem != null) ? fishData.adultItem : null;
         if (yieldItem != null && InventorySystem.Instance != null)
@@ -392,18 +369,19 @@ public class FishAgent : MonoBehaviour
             int leftover = InventorySystem.Instance.AddItem(yieldItem, 1);
             if (leftover > 0)
             {
-                if (FishManager.Instance != null)
-                    FishManager.Instance.ShowFloatingMessage(transform.position + Vector3.up * 0.5f, "Túi đồ đã đầy!", Color.red);
+                if (WaterTilemapFishPond.Instance != null)
+                    WaterTilemapFishPond.Instance.ShowFloatingMessage(transform.position + Vector3.up * 0.5f, "Túi đồ đã đầy!", Color.red);
                 return false;
             }
         }
 
-        if (FishManager.Instance != null)
+        if (WaterTilemapFishPond.Instance != null)
         {
-            FishManager.Instance.SpawnSplash(transform.position, 6);
+            WaterTilemapFishPond.Instance.SpawnSplash(transform.position, 6);
+            WaterTilemapFishPond.Instance.SpawnRipple(transform.position);
             string name = fishData != null ? fishData.speciesName : "Cá";
-            int sellPrice = yieldItem != null ? yieldItem.sellPrice : 30;
-            FishManager.Instance.ShowFloatingMessage(transform.position + Vector3.up * 0.5f, $"+1 {name} ({sellPrice}v)", new Color(0.2f, 1f, 0.8f));
+            int sellPrice = yieldItem != null ? yieldItem.sellPrice : 45;
+            WaterTilemapFishPond.Instance.ShowFloatingMessage(transform.position + Vector3.up * 0.5f, $"+1 {name} (Giá bán: {sellPrice}v)", new Color(0.2f, 1f, 0.8f));
         }
 
         Destroy(gameObject);
