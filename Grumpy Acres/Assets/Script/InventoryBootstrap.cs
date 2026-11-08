@@ -7,8 +7,16 @@ public static class InventoryBootstrap
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void AutoInit()
     {
-        // 1. Kiem tra EventSystem
-        if (Object.FindFirstObjectByType<EventSystem>() == null)
+        // 1. Kiem tra EventSystem - luon dam bao duy nhat 1 EventSystem, xoa sach trung lap
+        var allES = Object.FindObjectsByType<EventSystem>(FindObjectsSortMode.None);
+        if (allES.Length > 1)
+        {
+            for (int i = 1; i < allES.Length; i++)
+            {
+                if (allES[i] != null) Object.Destroy(allES[i].gameObject);
+            }
+        }
+        else if (allES.Length == 0)
         {
             var esGO = new GameObject("EventSystem", typeof(EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
             Object.DontDestroyOnLoad(esGO);
@@ -69,67 +77,62 @@ public static class InventoryBootstrap
             }
         }
 
-        // 3. Kiem tra UI Canvas
-        var existingHotbar = Object.FindFirstObjectByType<HotbarUI>();
-        var existingInvUI  = Object.FindFirstObjectByType<InventoryUI>();
-
-        if (existingHotbar == null || existingInvUI == null)
+        // 3. Xoa tat ca HotbarUI trung lap - LUON CHI CO DUY NHAT 1 THANH CONG CU
+        var allHotbars = Object.FindObjectsByType<HotbarUI>(FindObjectsSortMode.None);
+        for (int i = 1; i < allHotbars.Length; i++)
         {
-            var canvas = Object.FindFirstObjectByType<Canvas>();
-            GameObject canvasGO;
-            if (canvas == null)
-            {
-                canvasGO = new GameObject("InventoryCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-                canvas = canvasGO.GetComponent<Canvas>();
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                Object.DontDestroyOnLoad(canvasGO);
-            }
+            if (allHotbars[i] == null) continue;
+            // Xoa ca canvas cha neu canvas do la InventoryCanvas duoc sinh tu dong
+            var parentCanvas = allHotbars[i].GetComponentInParent<Canvas>();
+            if (parentCanvas != null && parentCanvas.gameObject.name == "InventoryCanvas")
+                Object.Destroy(parentCanvas.gameObject);
             else
-            {
-                canvasGO = canvas.gameObject;
-            }
+                Object.Destroy(allHotbars[i].gameObject);
+        }
 
-            // Dam bao Canvas Scaler luon dung ScaleWithScreenSize
-            var scaler = canvasGO.GetComponent<CanvasScaler>();
-            if (scaler != null)
-            {
-                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                scaler.referenceResolution = new Vector2(1920, 1080);
-                scaler.matchWidthOrHeight = 0.5f;
-            }
-
-            if (existingHotbar == null)
-            {
-                var hotbarGO = new GameObject("HotbarUI", typeof(RectTransform), typeof(HotbarUI));
-                hotbarGO.transform.SetParent(canvasGO.transform, false);
-            }
-
-            if (existingInvUI == null)
-            {
-                var invUIGO = new GameObject("InventoryUI", typeof(RectTransform), typeof(InventoryUI));
-                invUIGO.transform.SetParent(canvasGO.transform, false);
-            }
-
-            // Kiem tra SeasonClockUI
-            if (Object.FindFirstObjectByType<SeasonClockUI>() == null)
-            {
-                var clockGO = new GameObject("SeasonClockUI", typeof(RectTransform), typeof(SeasonClockUI));
-                clockGO.transform.SetParent(canvasGO.transform, false);
-            }
+        // 4. Dam bao co Canvas (chi tao neu chua co Canvas nao)
+        var existingCanvas = Object.FindFirstObjectByType<Canvas>();
+        GameObject canvasGO;
+        if (existingCanvas == null)
+        {
+            canvasGO = new GameObject("InventoryCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            var canvas = canvasGO.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            Object.DontDestroyOnLoad(canvasGO);
         }
         else
         {
-            // Neu da co san Canvas trong scene, dam bao co SeasonClockUI
-            if (Object.FindFirstObjectByType<SeasonClockUI>() == null)
-            {
-                var canvas = Object.FindFirstObjectByType<Canvas>();
-                if (canvas != null)
-                {
-                    var clockGO = new GameObject("SeasonClockUI", typeof(RectTransform), typeof(SeasonClockUI));
-                    clockGO.transform.SetParent(canvas.transform, false);
-                }
-            }
+            canvasGO = existingCanvas.gameObject;
+        }
+
+        // 5. SeasonClockUI luon phai co
+        if (Object.FindFirstObjectByType<SeasonClockUI>() == null)
+        {
+            var clockGO = new GameObject("SeasonClockUI", typeof(RectTransform), typeof(SeasonClockUI));
+            clockGO.transform.SetParent(canvasGO.transform, false);
+        }
+
+        // Neu da co HotbarUI thi khong tao them Hotbar/Inventory
+        if (Object.FindFirstObjectByType<HotbarUI>() != null)
+        {
+            return;
+        }
+
+        var scaler = canvasGO.GetComponent<CanvasScaler>();
+        if (scaler != null)
+        {
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
+        }
+
+        var hotbarGO = new GameObject("HotbarUI", typeof(RectTransform), typeof(HotbarUI));
+        hotbarGO.transform.SetParent(canvasGO.transform, false);
+
+        if (Object.FindFirstObjectByType<InventoryUI>() == null)
+        {
+            var invUIGO = new GameObject("InventoryUI", typeof(RectTransform), typeof(InventoryUI));
+            invUIGO.transform.SetParent(canvasGO.transform, false);
         }
     }
 }
-
