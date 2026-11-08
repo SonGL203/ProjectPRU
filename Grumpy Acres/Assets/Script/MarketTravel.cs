@@ -4,11 +4,11 @@ using UnityEngine.SceneManagement;
 
 public class MarketTravel : MonoBehaviour
 {
-    public const string SceneName = "CowboyMarket";
-
     static MarketTravel inst;
     static Vector3 returnPos, camPos;
     static float camSize;
+    static Color camBg;
+    static string currentMarketScene = "CowboyMarket";
 
     public static bool InMarket { get; private set; }
     public static bool Busy { get; private set; }
@@ -19,10 +19,13 @@ public class MarketTravel : MonoBehaviour
         return inst;
     }
 
-    public static void Enter(Vector3 returnTo)
+    public static void Enter(Vector3 returnTo) => Enter("CowboyMarket", returnTo);
+
+    public static void Enter(string sceneName, Vector3 returnTo)
     {
         if (Busy || InMarket) return;
-        Runner().StartCoroutine(EnterRoutine(returnTo));
+        currentMarketScene = string.IsNullOrEmpty(sceneName) ? "CowboyMarket" : sceneName;
+        Runner().StartCoroutine(EnterRoutine(currentMarketScene, returnTo));
     }
 
     public static void Exit()
@@ -31,18 +34,29 @@ public class MarketTravel : MonoBehaviour
         Runner().StartCoroutine(ExitRoutine());
     }
 
-    static IEnumerator EnterRoutine(Vector3 returnTo)
+    static IEnumerator EnterRoutine(string sceneName, Vector3 returnTo)
     {
         Busy = true;
-        var op = SceneManager.LoadSceneAsync(SceneName, LoadSceneMode.Additive);
+        var op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
         if (op == null) { Busy = false; yield break; }
         yield return op;
 
-        var view = FindFirstObjectByType<MarketView>();
+        MarketView view = null;
+        var loadedScene = SceneManager.GetSceneByName(sceneName);
+        if (loadedScene.isLoaded)
+        {
+            foreach (var rootGo in loadedScene.GetRootGameObjects())
+            {
+                view = rootGo.GetComponentInChildren<MarketView>(true);
+                if (view) break;
+            }
+        }
+        if (!view) view = FindFirstObjectByType<MarketView>();
+
         var cam = Camera.main;
         if (!view || !cam)
         {
-            Debug.LogError("Scene CowboyMarket thieu MarketView hoac scene khong co Main Camera.");
+            Debug.LogError($"Scene {sceneName} thieu MarketView hoac scene khong co Main Camera.");
             Busy = false;
             yield break;
         }
@@ -50,10 +64,31 @@ public class MarketTravel : MonoBehaviour
         returnPos = returnTo;
         camPos = cam.transform.position;
         camSize = cam.orthographicSize;
+        camBg = cam.backgroundColor;
 
         Teleport(view.spawn ? view.spawn.position : view.transform.position);
         cam.transform.position = new Vector3(view.transform.position.x, view.transform.position.y, camPos.z);
         cam.orthographicSize = view.orthoSize;
+        cam.backgroundColor = new Color(0.355f, 0.655f, 0.255f, 1f);
+
+        // Dam bao nen co xanh phu kin khong bao gio lo khoang xanh duong
+        if (!GameObject.Find("Background_Grass"))
+        {
+            var bgObj = new GameObject("Background_Grass");
+            bgObj.transform.position = new Vector3(view.transform.position.x, view.transform.position.y, 0f);
+            bgObj.transform.localScale = new Vector3(100f, 80f, 1f);
+            var sr = bgObj.AddComponent<SpriteRenderer>();
+            var tex = new Texture2D(2, 2);
+            var green = new Color(0.355f, 0.655f, 0.255f, 1f);
+            tex.SetPixels(new Color[] { green, green, green, green });
+            tex.Apply();
+            sr.sprite = Sprite.Create(tex, new Rect(0, 0, 2, 2), new Vector2(0.5f, 0.5f), 1f);
+            sr.sortingLayerName = "Default";
+            sr.sortingOrder = -100;
+        }
+
+        // Nap toan bo canh quan chi tiet 100% giong Farm vao Market
+        MarketStandaloneSupport.SetupMarketAtRuntime();
 
         InMarket = true;
         Busy = false;
@@ -68,9 +103,10 @@ public class MarketTravel : MonoBehaviour
         {
             cam.transform.position = camPos;
             cam.orthographicSize = camSize;
+            cam.backgroundColor = camBg;
         }
 
-        var scene = SceneManager.GetSceneByName(SceneName);
+        var scene = SceneManager.GetSceneByName(currentMarketScene);
         if (scene.isLoaded) yield return SceneManager.UnloadSceneAsync(scene);
 
         InMarket = false;

@@ -18,7 +18,7 @@ public class HotbarUI : MonoBehaviour
     public float pixelScale = 2.5f;
 
     [Tooltip("Khoang cach tu day man hinh len")]
-    public float bottomOffset = 10f;
+    public float bottomOffset = 26f;
 
     // Runtime
     GameObject barPanel;
@@ -28,6 +28,11 @@ public class HotbarUI : MonoBehaviour
 
     void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
         Instance = this;
 
         // Stretch RectTransform cha de anchor bottom-center hoat dong dung
