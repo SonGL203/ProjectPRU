@@ -11,6 +11,7 @@ public class CropManager : MonoBehaviour
 
     [Header("Tilemaps lien quan")]
     public Tilemap soilTilemap;
+    public Tilemap farmZoneTilemap;
 
     [Header("Mau sac Dat")]
     public Color drySoilColor = new(0.8f, 0.6f, 0.45f);
@@ -21,7 +22,10 @@ public class CropManager : MonoBehaviour
     public float interactRange = 6f;
 
     [Tooltip("Kich thuoc phong to hien thi cay trong o dat")]
-    public float plantScale = 4f;
+    public float plantScale = 7f;
+
+    [Tooltip("Do lech vi tri de goc cay nam gon ben trong o dat")]
+    public Vector3 plantOffset = new(0f, 0.22f, 0f);
 
     [Tooltip("Mau cua moi o dat dang trong cay khi bi enemy pha")]
     public float plotMaxHealth = 30f;
@@ -61,6 +65,12 @@ public class CropManager : MonoBehaviour
             if (soilGO != null) soilTilemap = soilGO.GetComponent<Tilemap>();
         }
 
+        if (farmZoneTilemap == null)
+        {
+            var fzGO = GameObject.Find("FarmZone");
+            if (fzGO != null) farmZoneTilemap = fzGO.GetComponent<Tilemap>();
+        }
+
         var playerObj = GameObject.FindWithTag("Player");
         if (playerObj != null) playerTransform = playerObj.transform;
     }
@@ -75,14 +85,19 @@ public class CropManager : MonoBehaviour
     {
         float dt = Time.deltaTime;
 
+        // Lay he so toc do lon theo mua (SeasonManager)
+        float seasonMultiplier = SeasonManager.Instance != null ? SeasonManager.Instance.GetCurrentGrowthMultiplier() : 1.0f;
+
         foreach (var kvp in plantedCrops)
         {
             var crop = kvp.Value;
             if (crop.seedData == null || crop.seedData.growthStages == null || crop.seedData.growthStages.Length == 0) continue;
             if (crop.IsMature) continue;
 
-            float growthRate = crop.isWatered ? 1.0f : 0.2f;
-            crop.currentGrowthTime += dt * growthRate;
+            // Bat buoc phai tuoi nuoc thi cay moi bat dau count down lon!
+            if (!crop.isWatered) continue;
+            crop.currentGrowthTime += dt * seasonMultiplier;
+
 
             int totalStages = crop.seedData.growthStages.Length;
             float totalTime = Mathf.Max(10f, crop.seedData.growthSeconds);
@@ -122,6 +137,17 @@ public class CropManager : MonoBehaviour
 
             Vector3Int cell = soilTilemap.WorldToCell(worldPos);
 
+            if (farmZoneTilemap == null)
+            {
+                var fzGO = GameObject.Find("FarmZone");
+                if (fzGO != null) farmZoneTilemap = fzGO.GetComponent<Tilemap>();
+            }
+
+            // Chuan hoa vi tri cell dat trong FarmZone de khong bi lech/tran ra vung co xanh
+            Vector3Int fzCell = farmZoneTilemap != null ? farmZoneTilemap.WorldToCell(worldPos) : cell;
+            if (farmZoneTilemap != null && !farmZoneTilemap.HasTile(fzCell))
+                return;
+
             if (playerTransform == null)
             {
                 var p = GameObject.FindWithTag("Player");
@@ -160,9 +186,20 @@ public class CropManager : MonoBehaviour
         }
     }
 
+    public bool IsSoilTilled(Vector3Int cell)
+    {
+        if (soilTilemap == null || !soilTilemap.HasTile(cell)) return false;
+        Color c = soilTilemap.GetColor(cell);
+        // Neu dat con nguyen mau ban dau (Color.white hoac alpha == 0) thi la chua cuoc
+        if (c == Color.white || c.a <= 0.05f) return false;
+        return true;
+    }
+
     public bool PlantSeed(Vector3Int cell, ItemData seedData, ItemSlot slot)
     {
         if (!soilTilemap.HasTile(cell)) return false;
+        // Chi cho phep trong cay khi dat da duoc cuoc
+        if (!IsSoilTilled(cell)) return false;
         if (plantedCrops.ContainsKey(cell)) return false;
 
         if (slot != null)
@@ -176,7 +213,7 @@ public class CropManager : MonoBehaviour
         plantGO.transform.SetParent(transform, false);
 
         Vector3 cellCenter = soilTilemap.GetCellCenterWorld(cell);
-        plantGO.transform.position = cellCenter;
+        plantGO.transform.position = cellCenter + plantOffset;
         plantGO.transform.localScale = Vector3.one * plantScale;
 
         var sr = plantGO.AddComponent<SpriteRenderer>();
@@ -201,17 +238,17 @@ public class CropManager : MonoBehaviour
 
     public bool WaterSoil(Vector3Int cell)
     {
+        // 1. Bat buoc phai co dat da dao (tilled soil tile)
         if (!soilTilemap.HasTile(cell)) return false;
+
+        // 2. Bat buoc phai co cay/hat giong da gieo o o dat nay moi cho phep tuoi nuoc
+        if (!plantedCrops.TryGetValue(cell, out var crop)) return false;
 
         wateredCells.Add(cell);
         soilTilemap.SetTileFlags(cell, TileFlags.None);
         soilTilemap.SetColor(cell, wateredSoilColor);
 
-        if (plantedCrops.TryGetValue(cell, out var crop))
-        {
-            crop.isWatered = true;
-        }
-
+        crop.isWatered = true;
         return true;
     }
 
@@ -233,9 +270,12 @@ public class CropManager : MonoBehaviour
         plantedCrops.Remove(cell);
 
         wateredCells.Remove(cell);
+        
+        // Khi thu hoach: Tra dat ve trang thai ban dau chua cuoc (mau dat goc Color.white)
         if (soilTilemap.HasTile(cell))
         {
-            soilTilemap.SetColor(cell, drySoilColor);
+            soilTilemap.SetTileFlags(cell, TileFlags.None);
+            soilTilemap.SetColor(cell, Color.white);
         }
     }
 
@@ -272,8 +312,11 @@ public class CropManager : MonoBehaviour
         if (crop.plantInstance != null) Destroy(crop.plantInstance);
         plantedCrops.Remove(cell);
         wateredCells.Remove(cell);
-        soilTilemap.SetTileFlags(cell, TileFlags.None);
-        soilTilemap.SetColor(cell, drySoilColor);
+        if (soilTilemap.HasTile(cell))
+        {
+            soilTilemap.SetTileFlags(cell, TileFlags.None);
+            soilTilemap.SetColor(cell, Color.white);
+        }
     }
 
     public void DestroyAllFarmland()

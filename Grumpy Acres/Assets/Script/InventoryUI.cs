@@ -14,9 +14,12 @@ public class InventoryUI : MonoBehaviour
     [Tooltip("Sprite vien sang khi hover vao slot")]
     public Sprite hoverSprite;
 
+    [Tooltip("Sprite dong xu tien vang")]
+    public Sprite coinSprite;
+
     [Header("Scale & Kich thuoc")]
     [Tooltip("Ti le phong to cua sprite pixel art (100x102 * scale)")]
-    public float pixelScale = 2.5f;
+    public float pixelScale = 5.5f;
 
     [Header("Trang thai")]
     public bool isOpen = false;
@@ -29,6 +32,9 @@ public class InventoryUI : MonoBehaviour
     TextMeshProUGUI infoTitleText;
     TextMeshProUGUI infoTypeText;
     TextMeshProUGUI infoDescText;
+
+    // Tien vang trong kho
+    TextMeshProUGUI goldAmountText;
 
     // Drag & Drop / Held Item
     Canvas rootCanvas;
@@ -47,28 +53,54 @@ public class InventoryUI : MonoBehaviour
         Instance = this;
         rootCanvas = GetComponentInParent<Canvas>();
 
-        // Stretch RectTransform cha de anchor center hoat dong dung
-        var myRT = GetComponent<RectTransform>();
-        if (myRT != null)
+        // Gioi han pixelScale hop ly de tranh loi
+        if (pixelScale <= 0f)
         {
-            myRT.anchorMin = Vector2.zero;
-            myRT.anchorMax = Vector2.one;
-            myRT.offsetMin = Vector2.zero;
-            myRT.offsetMax = Vector2.zero;
+            pixelScale = 5.5f;
         }
+
+        // Kiem tra xem ban da tao san GameObject InventoryWindow hay chua
+        var existingSlots = GetComponentsInChildren<SlotUI>(true);
+        if (existingSlots != null && existingSlots.Length >= 20)
+        {
+            windowPanel = gameObject; // Dung truc tiep GameObject nay
+            gridSlots = existingSlots;
+            goldAmountText = GetComponentInChildren<TextMeshProUGUI>(true);
+        }
+        else
+        {
+            // Reset Transform ve tam Canvas (Center) de khong bi lech toa do xuong duoi
+            transform.localPosition = Vector3.zero;
+
+            // Stretch RectTransform cha de anchor center hoat dong dung
+            var myRT = GetComponent<RectTransform>();
+            if (myRT != null)
+            {
+                myRT.anchorMin = Vector2.zero;
+                myRT.anchorMax = Vector2.one;
+                myRT.offsetMin = Vector2.zero;
+                myRT.offsetMax = Vector2.zero;
+                myRT.anchoredPosition = Vector2.zero;
+            }
 
 #if UNITY_EDITOR
-        if (windowSprite == null)
-        {
-            var sprites = UnityEditor.AssetDatabase.LoadAllAssetsAtPath("Assets/sprites/Inventory/Inventory.png");
-            foreach (var s in sprites)
+            if (windowSprite == null)
             {
-                if (s is Sprite sp && sp.name == "Inventory_1") { windowSprite = sp; break; }
+                var sprites = UnityEditor.AssetDatabase.LoadAllAssetsAtPath("Assets/sprites/Inventory/Inventory.png");
+                foreach (var s in sprites)
+                {
+                    if (s is Sprite sp && sp.name == "Inventory_2") { windowSprite = sp; break; }
+                }
             }
-        }
+            if (coinSprite == null)
+            {
+                coinSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/sprites/Inventory/Icon_Coin.png");
+            }
 #endif
 
-        BuildWindow();
+            BuildWindow();
+        }
+
         BuildHeldItemCursor();
     }
 
@@ -81,6 +113,12 @@ public class InventoryUI : MonoBehaviour
         {
             InventorySystem.Instance.OnChanged += Refresh;
         }
+
+        if (PlayerWallet.Instance != null)
+        {
+            PlayerWallet.Instance.OnChanged += UpdateGoldDisplay;
+            UpdateGoldDisplay(PlayerWallet.Instance.gold);
+        }
     }
 
     void OnDestroy()
@@ -88,6 +126,19 @@ public class InventoryUI : MonoBehaviour
         if (InventorySystem.Instance != null)
         {
             InventorySystem.Instance.OnChanged -= Refresh;
+        }
+
+        if (PlayerWallet.Instance != null)
+        {
+            PlayerWallet.Instance.OnChanged -= UpdateGoldDisplay;
+        }
+    }
+
+    void UpdateGoldDisplay(int currentGold)
+    {
+        if (goldAmountText != null)
+        {
+            goldAmountText.text = currentGold.ToString("N0");
         }
     }
 
@@ -105,11 +156,26 @@ public class InventoryUI : MonoBehaviour
         winRT.anchorMax = new Vector2(0.5f, 0.5f);
         winRT.pivot     = new Vector2(0.5f, 0.5f);
         winRT.sizeDelta = new Vector2(winW, winH);
-        winRT.anchoredPosition = new Vector2(0, 40f); // hoi lech len tren mot chut so voi tam
+        winRT.anchoredPosition = new Vector2(0f, 60f); // Nang nhe bang kho len tren de khong de len Hotbar co san ben duoi
 
         var winImg = windowPanel.GetComponent<Image>();
         winImg.sprite = windowSprite;
         winImg.type = Image.Type.Simple;
+
+        // Nut X dong kho/tui do (o goc tren ben phai cua so kho)
+        var closeBtnGO = new GameObject("CloseButton", typeof(RectTransform), typeof(Image), typeof(Button));
+        closeBtnGO.transform.SetParent(windowPanel.transform, false);
+        var closeBtnRT = closeBtnGO.GetComponent<RectTransform>();
+        closeBtnRT.anchorMin = new Vector2(1f, 1f);
+        closeBtnRT.anchorMax = new Vector2(1f, 1f);
+        closeBtnRT.pivot = new Vector2(1f, 1f);
+        closeBtnRT.anchoredPosition = new Vector2(-4f * pixelScale, -4f * pixelScale);
+        closeBtnRT.sizeDelta = new Vector2(12f * pixelScale, 12f * pixelScale);
+
+        var closeBtnImg = closeBtnGO.GetComponent<Image>();
+        closeBtnImg.color = new Color(1f, 1f, 1f, 0f); // Trong suot vi tren sprite cua so da co san hinh nut X
+        var closeBtn = closeBtnGO.GetComponent<Button>();
+        closeBtn.onClick.AddListener(() => Close());
 
         // 2. Tao 20 slot (5 cot x 4 hang) khop voi pixel cua Inventory_1
         // Col X trong sprite: 11, 27, 43, 59, 75 (w = 14)
@@ -127,7 +193,7 @@ public class InventoryUI : MonoBehaviour
                 int indexInGrid = row * InventorySystem.GridCols + col;
                 int globalIndex = InventorySystem.HotbarSize + indexInGrid; // 10..29
 
-                var slotGO = new GameObject($"GSlot_{indexInGrid}", typeof(RectTransform), typeof(SlotUI));
+                var slotGO = new GameObject($"GSlot_{indexInGrid}", typeof(RectTransform), typeof(Image), typeof(SlotUI));
                 slotGO.transform.SetParent(windowPanel.transform, false);
 
                 var slotRT = slotGO.GetComponent<RectTransform>();
@@ -137,8 +203,10 @@ public class InventoryUI : MonoBehaviour
                 slotRT.sizeDelta = new Vector2(slotDim, slotDim);
                 slotRT.anchoredPosition = new Vector2(colXs[col] * pixelScale, -rowYs[row] * pixelScale);
 
-                // Slot khong can Image nen vi sprite Inventory_1 da ve san o luoi!
-                // Chi them Icon
+                // Image trong suot bat buoc phai co de nhan su kien chuot (Raycast Target)
+                var slotBgImg = slotGO.GetComponent<Image>();
+                slotBgImg.color = Color.clear;
+                slotBgImg.raycastTarget = true;
                 var iconGO = new GameObject("Icon", typeof(RectTransform), typeof(Image));
                 iconGO.transform.SetParent(slotGO.transform, false);
                 var iconRT = iconGO.GetComponent<RectTransform>();
@@ -246,6 +314,47 @@ public class InventoryUI : MonoBehaviour
         infoDescText.raycastTarget = false;
         infoDescText.overflowMode = TextOverflowModes.Ellipsis;
         infoDescText.text = "";
+
+        // 4. Widget hien thi Tien Vang o goc tren ben trai cua so kho
+        var goldBadgeGO = new GameObject("GoldBadge", typeof(RectTransform));
+        goldBadgeGO.transform.SetParent(windowPanel.transform, false);
+        var goldBadgeRT = goldBadgeGO.GetComponent<RectTransform>();
+        goldBadgeRT.anchorMin = new Vector2(0f, 1f);
+        goldBadgeRT.anchorMax = new Vector2(0f, 1f);
+        goldBadgeRT.pivot     = new Vector2(0f, 0.5f);
+        // Can chinh ngang tam dong xu: y = -87.5f * pixelScale
+        goldBadgeRT.anchoredPosition = new Vector2(27f * pixelScale, -87.5f * pixelScale);
+        goldBadgeRT.sizeDelta        = new Vector2(35f * pixelScale, 14f * pixelScale);
+
+        // Text so vang
+        var goldTextGO = new GameObject("GoldText", typeof(RectTransform), typeof(TextMeshProUGUI));
+        goldTextGO.transform.SetParent(goldBadgeGO.transform, false);
+        var goldTextRT = goldTextGO.GetComponent<RectTransform>();
+        goldTextRT.anchorMin = Vector2.zero;
+        goldTextRT.anchorMax = Vector2.one;
+        goldTextRT.offsetMin = Vector2.zero;
+        goldTextRT.offsetMax = Vector2.zero;
+
+        goldAmountText = goldTextGO.GetComponent<TextMeshProUGUI>();
+        goldAmountText.fontSize = 20;
+        goldAmountText.fontStyle = FontStyles.Bold;
+        goldAmountText.color = new Color(0.25f, 0.18f, 0.1f);
+        goldAmountText.alignment = TextAlignmentOptions.MidlineLeft;
+        goldAmountText.raycastTarget = false;
+        goldAmountText.text = "0";
+
+        // Che vien ngoc xanh bang mau nen chuan RGB (229, 214, 161)
+        var coverGO = new GameObject("GemCover", typeof(RectTransform), typeof(Image));
+        coverGO.transform.SetParent(windowPanel.transform, false);
+        var coverRT = coverGO.GetComponent<RectTransform>();
+        coverRT.anchorMin = new Vector2(0f, 1f);
+        coverRT.anchorMax = new Vector2(0f, 1f);
+        coverRT.pivot     = new Vector2(0.5f, 0.5f);
+        coverRT.anchoredPosition = new Vector2(67.5f * pixelScale, -88f * pixelScale);
+        coverRT.sizeDelta        = new Vector2(11f * pixelScale, 12f * pixelScale);
+        var coverImg = coverGO.GetComponent<Image>();
+        coverImg.color = new Color(229f / 255f, 214f / 255f, 161f / 255f, 1f);
+        coverImg.raycastTarget = false;
     }
 
     void BuildHeldItemCursor()
@@ -282,9 +391,21 @@ public class InventoryUI : MonoBehaviour
         var kb = Keyboard.current;
         if (kb != null)
         {
-            if (kb.eKey.wasPressedThisFrame || kb.tabKey.wasPressedThisFrame || kb.escapeKey.wasPressedThisFrame)
+            if (isOpen)
             {
-                Toggle();
+                // Khi dang mo kho: Bam E, Esc, hoac X deu thoat/dong kho
+                if (kb.eKey.wasPressedThisFrame || kb.escapeKey.wasPressedThisFrame || kb.xKey.wasPressedThisFrame || kb.tabKey.wasPressedThisFrame)
+                {
+                    Close();
+                }
+            }
+            else
+            {
+                // Khi dang dong kho: Bam E hoac Tab de mo
+                if (kb.eKey.wasPressedThisFrame || kb.tabKey.wasPressedThisFrame)
+                {
+                    Open();
+                }
             }
         }
 
@@ -296,22 +417,26 @@ public class InventoryUI : MonoBehaviour
         }
     }
 
+    public void Open()
+    {
+        isOpen = true;
+        if (windowPanel != null) windowPanel.SetActive(true);
+        Refresh();
+        HideTooltip();
+    }
+
+    public void Close()
+    {
+        isOpen = false;
+        if (windowPanel != null) windowPanel.SetActive(false);
+        CancelHeld();
+        HideTooltip();
+    }
+
     public void Toggle()
     {
-        isOpen = !isOpen;
-        windowPanel.SetActive(isOpen);
-
-        if (isOpen)
-        {
-            Refresh();
-            HideTooltip();
-        }
-        else
-        {
-            // Neu dong tui ma dang cam vat pham tren chuot -> tra lai slot cu
-            CancelHeld();
-            HideTooltip();
-        }
+        if (isOpen) Close();
+        else Open();
     }
 
     public void Refresh()
@@ -326,6 +451,12 @@ public class InventoryUI : MonoBehaviour
 
         if (HotbarUI.Instance != null)
             HotbarUI.Instance.Refresh();
+
+        // Cap nhat so vang hien tai trong vi
+        if (goldAmountText != null && PlayerWallet.Instance != null)
+        {
+            goldAmountText.text = PlayerWallet.Instance.gold.ToString("N0");
+        }
     }
 
     // --- Drag & Drop Mechanics ---

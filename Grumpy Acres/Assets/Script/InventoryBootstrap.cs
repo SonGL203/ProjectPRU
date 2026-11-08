@@ -21,6 +21,13 @@ public static class InventoryBootstrap
             Object.DontDestroyOnLoad(invGO);
         }
 
+        // 2.0 Kiem tra SeasonManager
+        if (SeasonManager.Instance == null && Object.FindFirstObjectByType<SeasonManager>() == null)
+        {
+            var seasonGO = new GameObject("SeasonManager", typeof(SeasonManager));
+            Object.DontDestroyOnLoad(seasonGO);
+        }
+
         // 2.1 Kiem tra CropManager
         if (CropManager.Instance == null && Object.FindFirstObjectByType<CropManager>() == null)
         {
@@ -43,6 +50,22 @@ public static class InventoryBootstrap
             {
                 var vendorGO = new GameObject("FishVendor", typeof(BoxCollider2D), typeof(FishVendor));
                 vendorGO.transform.position = new Vector3(29.5f, 18.5f, 0f);
+            }
+        }
+
+        // 2.4 Kiem tra HouseStorageTrigger tren ngoi nha
+        var houseGO = GameObject.Find("house (1)");
+        if (houseGO != null)
+        {
+            if (houseGO.GetComponent<Collider2D>() == null)
+            {
+                var box = houseGO.AddComponent<BoxCollider2D>();
+                box.isTrigger = true;
+                box.size = new Vector2(2f, 1.8f);
+            }
+            if (houseGO.GetComponent<HouseStorageTrigger>() == null)
+            {
+                houseGO.AddComponent<HouseStorageTrigger>();
             }
         }
 
@@ -85,6 +108,26 @@ public static class InventoryBootstrap
             {
                 var invUIGO = new GameObject("InventoryUI", typeof(RectTransform), typeof(InventoryUI));
                 invUIGO.transform.SetParent(canvasGO.transform, false);
+            }
+
+            // Kiem tra SeasonClockUI
+            if (Object.FindFirstObjectByType<SeasonClockUI>() == null)
+            {
+                var clockGO = new GameObject("SeasonClockUI", typeof(RectTransform), typeof(SeasonClockUI));
+                clockGO.transform.SetParent(canvasGO.transform, false);
+            }
+        }
+        else
+        {
+            // Neu da co san Canvas trong scene, dam bao co SeasonClockUI
+            if (Object.FindFirstObjectByType<SeasonClockUI>() == null)
+            {
+                var canvas = Object.FindFirstObjectByType<Canvas>();
+                if (canvas != null)
+                {
+                    var clockGO = new GameObject("SeasonClockUI", typeof(RectTransform), typeof(SeasonClockUI));
+                    clockGO.transform.SetParent(canvas.transform, false);
+                }
             }
         }
     }

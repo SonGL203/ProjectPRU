@@ -36,6 +36,12 @@ public class PlayerMove : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         if (!GetComponent<PlayerHealth>()) gameObject.AddComponent<PlayerHealth>();
+
+        if (farmZone == null)
+        {
+            var fzGO = GameObject.Find("FarmZone");
+            if (fzGO != null) farmZone = fzGO.GetComponent<Tilemap>();
+        }
     }
 
     void Update()

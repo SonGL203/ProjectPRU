@@ -14,11 +14,11 @@ public class HotbarUI : MonoBehaviour
     public Sprite highlightSprite;
 
     [Header("Scale & Vi tri")]
-    [Tooltip("Ti le pixel art dong bo voi Inventory (Mac dinh 2.5f)")]
-    public float pixelScale = 2.5f;
+    [Tooltip("Ti le pixel art dong bo voi Inventory (Mac dinh 5.5f)")]
+    public float pixelScale = 5.5f;
 
     [Tooltip("Khoang cach tu day man hinh len")]
-    public float bottomOffset = 10f;
+    public float bottomOffset = 20f;
 
     // Runtime
     GameObject barPanel;
@@ -101,7 +101,7 @@ public class HotbarUI : MonoBehaviour
             float slotX = (6f + i * 16f) * pixelScale;
             float slotY = -4f * pixelScale;
 
-            var slotGO = new GameObject($"HSlot_{i + 1}", typeof(RectTransform), typeof(SlotUI));
+            var slotGO = new GameObject($"HSlot_{i + 1}", typeof(RectTransform), typeof(Image), typeof(SlotUI));
             slotGO.transform.SetParent(barPanel.transform, false);
 
             var slotRT = slotGO.GetComponent<RectTransform>();
@@ -110,6 +110,11 @@ public class HotbarUI : MonoBehaviour
             slotRT.pivot     = new Vector2(0f, 1f);
             slotRT.sizeDelta = new Vector2(slotDim, slotDim);
             slotRT.anchoredPosition = new Vector2(slotX, slotY);
+
+            // Image trong suot de nhan su kien click / drag
+            var slotBgImg = slotGO.GetComponent<Image>();
+            slotBgImg.color = Color.clear;
+            slotBgImg.raycastTarget = true;
 
             // Icon vat pham
             var iconGO = new GameObject("Icon", typeof(RectTransform), typeof(Image));
