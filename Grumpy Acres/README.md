@@ -10,6 +10,7 @@ Tài liệu này tổng hợp toàn bộ hệ thống kinh tế trong game (Nôn
 3. [Hệ Thống Kinh Tế: Thủy Sản (Cá & Dụng Cụ Nuôi)](#3-hệ-thống-kinh-tế-thủy-sản-cá--dụng-cụ-nuôi)
 4. [Hệ Thống Thuê Cowboy Phòng Thủ (Cowboy Vendors)](#4-hệ-thống-thuê-cowboy-phòng-thủ-cowboy-vendors)
 5. [Chu Trình Ngày Đêm & Mùa Vụ (Day-Night & Seasons)](#5-chu-trình-ngày-đêm--mùa-vụ-day-night--seasons)
+6. [Trại bò và bán sữa (CowFarm)](#6-trại-bò-và-bán-sữa-cowfarm)
 
 ---
 
@@ -94,3 +95,33 @@ Dành riêng cho Team Dev và QA Tester thao tác nhanh trong màn chơi (`Sampl
   - **Mùa Thu (Thu)**: Mùa thu hoạch vàng, sương mù nhẹ.
   - **Mùa Đông (Đông)**: Giá lạnh, đêm dài hơn ngày, quái vật hung hãn hơn.
 
+---
+
+## 6. Trại bò và bán sữa (CowFarm)
+
+Trại bò là scene riêng ở phía đông SampleScene. Lối vào phía tây dẫn đến bãi chăn có hàng rào, chuồng, máng cỏ, ba vị trí vắt sữa và quầy mua bán. Scene dùng chung Player, túi đồ, ví, HUD và lịch mùa của SampleScene.
+
+| Vật phẩm | Giá | Cách dùng |
+| --- | ---: | --- |
+| Cỏ khô | 8 vàng/bó | Mỗi lượt cho một con bò ăn tốn một bó. |
+| Xô rỗng | 12 vàng/xô | Mua một lần và dùng lại sau mỗi lượt bán. |
+| Xô sữa | Bán 22 vàng/xô | Bán sữa trả lại xô rỗng, lãi 14 vàng/lượt sau chi phí cỏ. |
+
+### Chu kỳ cho sữa theo mùa
+
+| Mùa | Tốc độ so với mùa Thu | Thời gian xấp xỉ từ lúc cho ăn |
+| --- | ---: | ---: |
+| Xuân | 120% | 20 giây |
+| Hạ | 80% | 30 giây |
+| Thu | 100% | 24 giây |
+| Đông | 60% | 40 giây |
+
+Mùa hiện hành lấy từ `SeasonManager`. Nếu đổi mùa giữa lượt, tiến độ đã tích lũy được giữ lại và tốc độ mới áp dụng ngay. Tiến độ được giữ khi về SampleScene và tiếp tục chạy khi quay lại trại bò trong cùng phiên chơi. Giá chỉnh trên ba ItemData `CowFarm*Item`. Thời gian cơ bản và phạm vi tương tác chỉnh trên `Dairy Manager`.
+
+### Chơi thử trong Unity
+
+Cổng biển **Cow Farm** nằm ở cuối đường đất phía đông SampleScene. Prefab có sẵn điểm quay về ở bên trái cổng. Scene CowFarm đã được bật trong Build Profiles → Scene List.
+
+1. Bấm Play từ `SampleScene` và đi qua cổng đông khi không còn quái. Dùng `F2` để nạp tiền test nếu cần.
+2. Đến quầy và bấm **Mua cỏ** hoặc **Mua xô**. Đến máng để bấm **Cho ăn**. Bảng trên màn hình và nhãn cạnh từng con bò hiển thị **Đói**, thời gian còn lại, hoặc **Có sữa!**. Đứng cạnh bò đã sẵn sàng và bấm **Vắt sữa**, sau đó về quầy bấm **Bán sữa**. Kiểm tra ví tăng 22 vàng và túi nhận lại xô.
+3. Dùng `F5` để kiểm tra tốc độ ở cả bốn mùa. Thử vắt khi chưa có xô, mua khi túi đầy và đi qua cổng tây để kiểm tra vị trí trở về.
