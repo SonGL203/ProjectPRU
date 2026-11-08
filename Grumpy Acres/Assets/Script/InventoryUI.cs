@@ -291,7 +291,7 @@ public class InventoryUI : MonoBehaviour
         // Cap nhat vi tri item dang cam theo chuot
         if (IsHoldingItem && heldItemRT != null)
         {
-            var mousePos = Mouse.current != null ? Mouse.current.position.ReadValue() : (Vector2)Input.mousePosition;
+            var mousePos = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
             UpdateHeldItemPosition(mousePos);
         }
     }
@@ -569,6 +569,9 @@ public class InventoryUI : MonoBehaviour
                 ItemType.Tool => new Color(0.1f, 0.35f, 0.75f),
                 ItemType.Seed => new Color(0.15f, 0.55f, 0.15f),
                 ItemType.Crop => new Color(0.75f, 0.35f, 0.05f),
+                ItemType.FishFry => new Color(0.1f, 0.65f, 0.75f),
+                ItemType.Fish => new Color(0.05f, 0.5f, 0.7f),
+                ItemType.FishFood => new Color(0.85f, 0.55f, 0.1f),
                 _ => new Color(0.25f, 0.15f, 0.1f)
             };
         }
@@ -580,6 +583,9 @@ public class InventoryUI : MonoBehaviour
                 ItemType.Tool => $"[Cong cu: {item.toolType}]",
                 ItemType.Seed => $"[Hat giong]  (Lon len sau {item.growthDays} ngay)",
                 ItemType.Crop => $"[Nong san]  (Gia ban: {item.sellPrice} vang)",
+                ItemType.FishFry => $"[Ca giong]  (Tha xuong ao nuoc)",
+                ItemType.Fish => $"[Thuy san]  (Gia ban: {item.sellPrice} vang)",
+                ItemType.FishFood => $"[Thuc an ca]  (Cho ca an de mau lon)",
                 _ => "[Vat pham]"
             };
             infoTypeText.text = typeStr;

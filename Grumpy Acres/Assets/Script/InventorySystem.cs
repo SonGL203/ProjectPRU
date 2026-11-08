@@ -114,6 +114,10 @@ public class InventorySystem : MonoBehaviour
         {
             GiveAllTestItems();
         }
+        if (kb.f3Key.wasPressedThisFrame)
+        {
+            GiveAllFishItems();
+        }
     }
 
     public void GiveAllTestItems()
@@ -128,8 +132,32 @@ public class InventorySystem : MonoBehaviour
         AddItemByName("Tool_Axe", 1);
         AddItemByName("Tool_Pickaxe", 1);
 
+        FishItemsDatabase.Initialize();
+        if (FishItemsDatabase.CarpFryItem != null) AddItem(FishItemsDatabase.CarpFryItem, 5);
+        if (FishItemsDatabase.FishFoodItem != null) AddItem(FishItemsDatabase.FishFoodItem, 10);
+        if (FishItemsDatabase.FishNetItem != null) AddItem(FishItemsDatabase.FishNetItem, 1);
+
         NotifyChanged();
         SelectHotbar(0);
+    }
+
+    public void GiveAllFishItems()
+    {
+        ClearAll();
+        FishItemsDatabase.Initialize();
+
+        if (FishItemsDatabase.CarpFryItem != null) AddItem(FishItemsDatabase.CarpFryItem, 5);
+        if (FishItemsDatabase.GoldfishFryItem != null) AddItem(FishItemsDatabase.GoldfishFryItem, 5);
+        if (FishItemsDatabase.SalmonFryItem != null) AddItem(FishItemsDatabase.SalmonFryItem, 5);
+        if (FishItemsDatabase.FishFoodItem != null) AddItem(FishItemsDatabase.FishFoodItem, 20);
+        if (FishItemsDatabase.FishNetItem != null) AddItem(FishItemsDatabase.FishNetItem, 1);
+        if (FishItemsDatabase.FishPondItem != null) AddItem(FishItemsDatabase.FishPondItem, 2);
+
+        if (PlayerWallet.Instance != null) PlayerWallet.Instance.Add(200);
+
+        NotifyChanged();
+        SelectHotbar(0);
+        Debug.Log("[Nuoi Ca] Da nhan day du vat pham nuoi ca va 200 vang!");
     }
 
     void AddItemByName(string assetName, int count)

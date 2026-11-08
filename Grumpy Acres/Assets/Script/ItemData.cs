@@ -6,7 +6,10 @@ public enum ItemType
     Seed,
     Crop,
     Misc,
-    Placeable
+    Placeable,
+    FishFry,   // Ca giong tha xuong ao
+    Fish,      // Ca truong thanh thu hoach
+    FishFood   // Thuc an cho ca
 }
 
 public enum ToolType
@@ -15,7 +18,8 @@ public enum ToolType
     Hoe,
     WateringCan,
     Axe,
-    Pickaxe
+    Pickaxe,
+    FishNet    // Vot bat ca
 }
 
 [CreateAssetMenu(fileName = "NewItem", menuName = "Inventory/Item Data")]
@@ -47,6 +51,14 @@ public class ItemData : ScriptableObject
     public int growthDays = 4;
     [Tooltip("Cac sprite cac giai doan phat trien tu mam den chin")]
     public Sprite[] growthStages;
+
+    [Header("Neu la Ca (Fish / FishFry)")]
+    [Tooltip("Thanh pham ca thu duoc khi lon (neu la ca giong)")]
+    public ItemData fishYield;
+    [Tooltip("Sprite ca con")]
+    public Sprite frySprite;
+    [Tooltip("Sprite ca truong thanh")]
+    public Sprite adultSprite;
 
     [Header("Gia ca")]
     public int buyPrice = 10;

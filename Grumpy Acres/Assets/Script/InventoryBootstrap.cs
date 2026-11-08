@@ -28,6 +28,24 @@ public static class InventoryBootstrap
             Object.DontDestroyOnLoad(cropGO);
         }
 
+        // 2.2 Kiem tra FishManager
+        if (FishManager.Instance == null && Object.FindFirstObjectByType<FishManager>() == null)
+        {
+            var fishMgrGO = new GameObject("FishManager", typeof(FishManager));
+            Object.DontDestroyOnLoad(fishMgrGO);
+        }
+
+        // 2.3 Kiem tra FishVendor (dat gan bo ao toa do x=29.5, y=18.5)
+        if (Object.FindFirstObjectByType<FishVendor>() == null)
+        {
+            var waterGO = GameObject.Find("Water");
+            if (waterGO != null)
+            {
+                var vendorGO = new GameObject("FishVendor", typeof(BoxCollider2D), typeof(FishVendor));
+                vendorGO.transform.position = new Vector3(29.5f, 18.5f, 0f);
+            }
+        }
+
         // 3. Kiem tra UI Canvas
         var existingHotbar = Object.FindFirstObjectByType<HotbarUI>();
         var existingInvUI  = Object.FindFirstObjectByType<InventoryUI>();

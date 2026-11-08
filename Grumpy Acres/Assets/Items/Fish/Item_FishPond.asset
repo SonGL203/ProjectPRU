@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ba8f5f66d581bf4689ff2f738a308e4, type: 3}
+  m_Name: Item_FishPond
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  id: item_fish_pond
+  itemName: "B\u1EC3 Nu\xF4i C\xE1"
+  icon: {fileID: 5817799449637031085, guid: d5d9c4f60cc793f44b424b4cbf6a3842, type: 3}
+  iconColor: {r: 1, g: 1, b: 1, a: 1}
+  itemType: 4
+  description: "Ao/B\u1EC3 nu\xF4i c\xE1 \u0111\u1EB7t tr\xEAn m\u1EB7t \u0111\u1EA5t. Cho ph\xE9p nu\xF4i c\xE1 ngay t\u1EA1i n\xF4ng tr\u1EA1i."
+  maxStack: 10
+  toolType: 0
+  cropYield: {fileID: 0}
+  growthSeconds: 0
+  growthDays: 0
+  growthStages: []
+  fishYield: {fileID: 0}
+  frySprite: {fileID: 0}
+  adultSprite: {fileID: 0}
+  buyPrice: 100
+  sellPrice: 50
