@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -13,6 +13,10 @@ public class CropManager : MonoBehaviour
     public Tilemap soilTilemap;
     public Tilemap farmZoneTilemap;
 
+    [Header("Prefab Cay trong")]
+    [Tooltip("Prefab dai dien cho cay trong (CropPlant.prefab). Neu de trong se tu tao fallback")]
+    public CropPlant cropPlantPrefab;
+
     [Header("Mau sac Dat")]
     public Color drySoilColor = new(0.8f, 0.6f, 0.45f);
     public Color wateredSoilColor = new(0.5f, 0.35f, 0.22f);
@@ -22,7 +26,7 @@ public class CropManager : MonoBehaviour
     public float interactRange = 6f;
 
     [Tooltip("Kich thuoc phong to hien thi cay trong o dat")]
-    public float plantScale = 7f;
+    public float plantScale = 9f;
 
     [Tooltip("Do lech vi tri de goc cay nam gon ben trong o dat")]
     public Vector3 plantOffset = new(0f, 0.22f, 0f);
@@ -41,6 +45,7 @@ public class CropManager : MonoBehaviour
         public float health;
         public GameObject plantInstance;
         public SpriteRenderer spriteRenderer;
+        public CropPlant cropPlantComponent;
 
         public bool IsMature => currentStage >= (seedData.growthStages != null ? seedData.growthStages.Length - 1 : 0);
     }
@@ -209,15 +214,33 @@ public class CropManager : MonoBehaviour
             InventorySystem.Instance.NotifyChanged();
         }
 
-        var plantGO = new GameObject($"Crop_{cell.x}_{cell.y}");
-        plantGO.transform.SetParent(transform, false);
+        GameObject plantGO;
+        SpriteRenderer sr;
+        CropPlant cp = null;
 
         Vector3 cellCenter = soilTilemap.GetCellCenterWorld(cell);
-        plantGO.transform.position = cellCenter + plantOffset;
-        plantGO.transform.localScale = Vector3.one * plantScale;
+        Vector3 spawnPos = cellCenter + plantOffset;
 
-        var sr = plantGO.AddComponent<SpriteRenderer>();
-        sr.sortingOrder = 5;
+        if (cropPlantPrefab != null)
+        {
+            cp = Instantiate(cropPlantPrefab, spawnPos, Quaternion.identity, transform);
+            cp.name = $"Crop_{cell.x}_{cell.y}";
+            cp.transform.localScale = Vector3.one * plantScale;
+            plantGO = cp.gameObject;
+            sr = cp.spriteRenderer != null ? cp.spriteRenderer : cp.GetComponent<SpriteRenderer>();
+        }
+        else
+        {
+            plantGO = new GameObject($"Crop_{cell.x}_{cell.y}");
+            plantGO.transform.SetParent(transform, false);
+            plantGO.transform.position = spawnPos;
+            plantGO.transform.localScale = Vector3.one * plantScale;
+
+            sr = plantGO.AddComponent<SpriteRenderer>();
+            sr.sortingOrder = 5;
+            cp = plantGO.AddComponent<CropPlant>();
+            cp.spriteRenderer = sr;
+        }
 
         var planted = new PlantedCrop
         {
@@ -228,7 +251,8 @@ public class CropManager : MonoBehaviour
             currentStage = 0,
             health = plotMaxHealth,
             plantInstance = plantGO,
-            spriteRenderer = sr
+            spriteRenderer = sr,
+            cropPlantComponent = cp
         };
 
         UpdatePlantVisual(planted);
@@ -333,7 +357,15 @@ public class CropManager : MonoBehaviour
         if (crop.spriteRenderer == null || crop.seedData == null || crop.seedData.growthStages == null) return;
         if (crop.currentStage >= 0 && crop.currentStage < crop.seedData.growthStages.Length)
         {
-            crop.spriteRenderer.sprite = crop.seedData.growthStages[crop.currentStage];
+            var stageSprite = crop.seedData.growthStages[crop.currentStage];
+            if (crop.cropPlantComponent != null)
+            {
+                crop.cropPlantComponent.SetStage(stageSprite, crop.IsMature);
+            }
+            else
+            {
+                crop.spriteRenderer.sprite = stageSprite;
+            }
         }
     }
 }

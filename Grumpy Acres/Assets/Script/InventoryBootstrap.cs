@@ -28,13 +28,6 @@ public static class InventoryBootstrap
             Object.DontDestroyOnLoad(seasonGO);
         }
 
-        // 2.1 Kiem tra CropManager
-        if (CropManager.Instance == null && Object.FindFirstObjectByType<CropManager>() == null)
-        {
-            var cropGO = new GameObject("CropManager", typeof(CropManager));
-            Object.DontDestroyOnLoad(cropGO);
-        }
-
         // 2.2 Kiem tra WaterTilemapFishPond tren GameObject Water
         var waterObj = GameObject.Find("Water");
         if (waterObj != null && waterObj.GetComponent<WaterTilemapFishPond>() == null)

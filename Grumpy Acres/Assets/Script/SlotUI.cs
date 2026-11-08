@@ -97,13 +97,27 @@ public class SlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
         }
     }
 
-    // --- Click: Quick Transfer / Click-to-Move ---
+    // --- Click: Quick Transfer / Click-to-Move / Select Hotbar ---
     public void OnPointerClick(PointerEventData eventData)
     {
         var inv = InventorySystem.Instance;
         if (inv == null) return;
 
-        // Shift + Click -> Chuyen nhanh giua Hotbar va Grid
+        bool isInventoryOpen = InventoryUI.Instance != null && InventoryUI.Instance.isOpen;
+
+        // TRƯỜNG HỢP 1: KHI CHƯA MỞ KHO (Kho đóng)
+        // Nhấn chuột vào slot trên Hotbar -> Chọn và trang bị (active) slot/item đó để dùng ngay
+        if (!isInventoryOpen)
+        {
+            if (isHotbarSlot && slotIndex >= 0 && slotIndex < InventorySystem.HotbarSize)
+            {
+                inv.SelectHotbar(slotIndex);
+            }
+            return;
+        }
+
+        // TRƯỜNG HỢP 2: KHI ĐANG Ở TRONG KHO (Kho mở)
+        // Shift + Click -> Chuyển nhanh giữa Hotbar và Grid
         bool isShift = UnityEngine.InputSystem.Keyboard.current != null &&
                        (UnityEngine.InputSystem.Keyboard.current.leftShiftKey.isPressed ||
                         UnityEngine.InputSystem.Keyboard.current.rightShiftKey.isPressed);
@@ -114,34 +128,24 @@ public class SlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
             return;
         }
 
-        // Right-Click: Tach nua stack hoac tha 1 item
-        if (eventData.button == PointerEventData.InputButton.Right)
+        // Left-Click:
+        // 1. Nếu đang cầm item trên chuột -> Đặt vào slot này
+        // 2. Nếu click trực tiếp vào item trong Hotbar hoặc Grid -> Tự động chuyển nhanh (QuickTransfer)
+        //    (Từ Hotbar nhảy vào Kho, hoặc từ Kho nhảy xuống Hotbar)
+        // 3. Nếu chuột đang trống và click vào slot trống -> Không làm gì
+        if (eventData.button == PointerEventData.InputButton.Left)
         {
             if (InventoryUI.Instance != null && InventoryUI.Instance.IsHoldingItem)
             {
-                // Tha 1 item vao slot nay
-                InventoryUI.Instance.DropOneToSlot(slotIndex);
+                InventoryUI.Instance.PlaceHeldItem(slotIndex);
             }
             else if (currentSlot != null && !currentSlot.IsEmpty)
             {
-                // Cam nua stack vao chuot
-                if (InventoryUI.Instance != null)
-                    InventoryUI.Instance.PickUpHalf(slotIndex);
-            }
-            return;
-        }
-
-        // Left-Click: Cam len hoac Dat xuong / Hoan doi
-        if (eventData.button == PointerEventData.InputButton.Left)
-        {
-            if (InventoryUI.Instance != null)
-            {
-                if (InventoryUI.Instance.IsHoldingItem)
+                // Khi click vào icon item: Tự động nhảy vào kho (hoặc xuống hotbar)
+                bool transferred = inv.QuickTransfer(slotIndex);
+                if (!transferred)
                 {
-                    InventoryUI.Instance.PlaceHeldItem(slotIndex);
-                }
-                else if (currentSlot != null && !currentSlot.IsEmpty)
-                {
+                    // Nếu không có chỗ để nhảy tự động -> cầm lên chuột
                     InventoryUI.Instance.PickUpFull(slotIndex);
                 }
             }
