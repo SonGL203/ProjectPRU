@@ -415,7 +415,7 @@ public class InventoryUI : MonoBehaviour
         var kb = Keyboard.current;
         if (kb != null)
         {
-            bool inventoryKey = kb.eKey.wasPressedThisFrame && !CowFarm.CowFarmPortal.IsInFarm;
+            bool inventoryKey = kb.eKey.wasPressedThisFrame && !CowFarm.CowFarmDairy.HandlesInteractKey;
             if (isOpen)
             {
                 // Khi dang mo kho: Bam E, Esc, hoac X deu thoat/dong kho
