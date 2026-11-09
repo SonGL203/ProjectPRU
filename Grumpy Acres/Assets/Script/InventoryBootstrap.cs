@@ -120,21 +120,29 @@ public static class InventoryBootstrap
                 invUIGO.transform.SetParent(canvasGO.transform, false);
             }
 
-            if (Object.FindFirstObjectByType<SeasonClockUI>() == null)
+            string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            if (currentScene != "Market" && currentScene != "CowboyMarket")
             {
-                var clockGO = new GameObject("SeasonClockUI", typeof(RectTransform), typeof(SeasonClockUI));
-                clockGO.transform.SetParent(canvasGO.transform, false);
+                if (Object.FindFirstObjectByType<SeasonClockUI>() == null)
+                {
+                    var clockGO = new GameObject("SeasonClockUI", typeof(RectTransform), typeof(SeasonClockUI));
+                    clockGO.transform.SetParent(canvasGO.transform, false);
+                }
             }
         }
         else
         {
-            if (Object.FindFirstObjectByType<SeasonClockUI>() == null)
+            string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            if (currentScene != "Market" && currentScene != "CowboyMarket")
             {
-                var canvas = Object.FindFirstObjectByType<Canvas>();
-                if (canvas != null)
+                if (Object.FindFirstObjectByType<SeasonClockUI>() == null)
                 {
-                    var clockGO = new GameObject("SeasonClockUI", typeof(RectTransform), typeof(SeasonClockUI));
-                    clockGO.transform.SetParent(canvas.transform, false);
+                    var canvas = Object.FindFirstObjectByType<Canvas>();
+                    if (canvas != null)
+                    {
+                        var clockGO = new GameObject("SeasonClockUI", typeof(RectTransform), typeof(SeasonClockUI));
+                        clockGO.transform.SetParent(canvas.transform, false);
+                    }
                 }
             }
         }

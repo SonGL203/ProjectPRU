@@ -52,11 +52,22 @@ public class MarketStandaloneSupport : MonoBehaviour
 
     static void CleanupSeasonClockUI()
     {
-        // Xoa bat ky UI SeasonClock nao trong Market de man hinh hoan toan thoang dang, khong vuong giua man hinh
+        // Xoa bat ky UI SeasonClock / Panel Mua nao trong Market de man hinh hoan toan thoang dang, khong vuong giua man hinh
         var clocks = Object.FindObjectsByType<SeasonClockUI>(FindObjectsSortMode.None);
         foreach (var c in clocks)
         {
             if (c != null) Object.Destroy(c.gameObject);
+        }
+
+        var allObjects = Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None);
+        foreach (var go in allObjects)
+        {
+            if (go == null) continue;
+            string n = go.name;
+            if (n == "SeasonClockUI" || n == "SeasonClock" || n == "SeasonClockPanel" || n == "SeasonText" || n == "DayText")
+            {
+                Object.Destroy(go);
+            }
         }
 
         // 1. Dam bao SeasonManager hoat dong ngam cho logic tro choi

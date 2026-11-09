@@ -13,6 +13,14 @@ public class SeasonClockUI : MonoBehaviour
 
     void Awake()
     {
+        // Khong hien thi tren bat ky canh cho Market nao de giu man hinh luon thoang dang
+        string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        if (sceneName == "Market" || sceneName == "CowboyMarket")
+        {
+            Destroy(gameObject);
+            return;
+        }
+
         Instance = this;
 
         // Tim cac component con neu co san trong prefab/scene
@@ -85,7 +93,6 @@ public class SeasonClockUI : MonoBehaviour
         if (SeasonManager.Instance == null) return;
 
         string name = SeasonManager.GetSeasonNameVN(season);
-        string icon = SeasonManager.GetSeasonIcon(season);
         float mult = SeasonManager.Instance.GetCurrentGrowthMultiplier();
         string speedDesc = mult >= 1.2f ? " (+30% tốc độ)" : (mult <= 0.8f ? " (-40% lạnh)" : "");
 
@@ -100,7 +107,8 @@ public class SeasonClockUI : MonoBehaviour
 
         if (seasonText != null)
         {
-            seasonText.text = $"{icon} {name}";
+            // Dung ten mua thuan khong emoji de tranh loi ky tu o vuong tren LiberationSans SDF
+            seasonText.text = $"{name}";
             seasonText.color = seasonColor;
         }
 
