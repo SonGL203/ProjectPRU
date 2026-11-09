@@ -4,15 +4,28 @@ using UnityEngine;
 public class PlayerWallet : MonoBehaviour
 {
     public static PlayerWallet Instance { get; private set; }
+    public static int savedGold = -1;
 
     public int gold = 0;
     public event Action<int> OnChanged;
 
     void Awake()
     {
-        if (Instance && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
-        DontDestroyOnLoad(gameObject);
+        if (savedGold >= 0)
+        {
+            gold = savedGold;
+        }
+        else
+        {
+            if (gold <= 0) gold = 150;
+            savedGold = gold;
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
     }
 
     void Update()
@@ -24,6 +37,7 @@ public class PlayerWallet : MonoBehaviour
     public void Add(int amount)
     {
         gold += amount;
+        savedGold = gold;
         OnChanged?.Invoke(gold);
     }
 
@@ -31,6 +45,7 @@ public class PlayerWallet : MonoBehaviour
     {
         if (gold < amount) return false;
         gold -= amount;
+        savedGold = gold;
         OnChanged?.Invoke(gold);
         return true;
     }

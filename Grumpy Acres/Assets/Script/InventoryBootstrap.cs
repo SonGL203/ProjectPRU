@@ -7,7 +7,7 @@ public static class InventoryBootstrap
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void AutoInit()
     {
-        // 1. Kiem tra va giu duy nhat 1 EventSystem
+        // 1. Kiem tra EventSystem (Khong dung DontDestroyOnLoad de tranh loi 2 EventSystems giua cac scene)
         var eventSystems = Object.FindObjectsByType<EventSystem>(FindObjectsSortMode.None);
         if (eventSystems.Length > 1)
         {
@@ -16,8 +16,7 @@ public static class InventoryBootstrap
         }
         else if (eventSystems.Length == 0)
         {
-            var esGO = new GameObject("EventSystem", typeof(EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
-            Object.DontDestroyOnLoad(esGO);
+            new GameObject("EventSystem", typeof(EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
         }
 
         // 2. Kiem tra InventorySystem
@@ -95,7 +94,6 @@ public static class InventoryBootstrap
                 canvasGO = new GameObject("InventoryCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
                 canvas = canvasGO.GetComponent<Canvas>();
                 canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                Object.DontDestroyOnLoad(canvasGO);
             }
             else
             {
