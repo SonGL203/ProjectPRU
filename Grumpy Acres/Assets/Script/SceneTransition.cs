@@ -9,7 +9,10 @@ public class SceneTransition : MonoBehaviour
     public string targetScene;
     public string targetSpawn;
 
-    void Reset() => GetComponent<Collider2D>().isTrigger = true;
+    void Reset()
+    {
+        GetComponent<Collider2D>().isTrigger = true;
+    }
 
     void OnTriggerEnter2D(Collider2D other)
     {

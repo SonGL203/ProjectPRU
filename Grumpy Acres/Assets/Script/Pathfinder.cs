@@ -87,13 +87,22 @@ public class Pathfinder : MonoBehaviour
             }
     }
 
-    Vector2 CellCenter(int x, int y) => origin + new Vector2((x + 0.5f) * cellSize, (y + 0.5f) * cellSize);
+    Vector2 CellCenter(int x, int y)
+    {
+        return origin + new Vector2((x + 0.5f) * cellSize, (y + 0.5f) * cellSize);
+    }
 
-    Vector2Int ToCell(Vector2 p) => new(
-        Mathf.Clamp(Mathf.FloorToInt((p.x - origin.x) / cellSize), 0, w - 1),
-        Mathf.Clamp(Mathf.FloorToInt((p.y - origin.y) / cellSize), 0, h - 1));
+    Vector2Int ToCell(Vector2 p)
+    {
+        int x = Mathf.Clamp(Mathf.FloorToInt((p.x - origin.x) / cellSize), 0, w - 1);
+        int y = Mathf.Clamp(Mathf.FloorToInt((p.y - origin.y) / cellSize), 0, h - 1);
+        return new Vector2Int(x, y);
+    }
 
-    bool Blocked(int x, int y) => x < 0 || y < 0 || x >= w || y >= h || blocked[y * w + x];
+    bool Blocked(int x, int y)
+    {
+        return x < 0 || y < 0 || x >= w || y >= h || blocked[y * w + x];
+    }
 
     Vector2Int NearestFree(Vector2Int c)
     {

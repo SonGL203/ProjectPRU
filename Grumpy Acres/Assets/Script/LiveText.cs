@@ -18,8 +18,14 @@ public class LiveText : MonoBehaviour
         ui = GetComponent<Text>();
     }
 
-    void OnEnable() => Refresh();
-    void Update() => Refresh();
+    void OnEnable()
+    {
+        Refresh();
+    }
+    void Update()
+    {
+        Refresh();
+    }
 
     void Refresh()
     {

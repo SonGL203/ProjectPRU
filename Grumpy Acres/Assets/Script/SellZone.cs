@@ -7,7 +7,10 @@ public class SellZone : MonoBehaviour
 
     public bool PlayerInside { get; private set; }
 
-    void Reset() => GetComponent<Collider2D>().isTrigger = true;
+    void Reset()
+    {
+        GetComponent<Collider2D>().isTrigger = true;
+    }
 
     void OnTriggerEnter2D(Collider2D other)
     {

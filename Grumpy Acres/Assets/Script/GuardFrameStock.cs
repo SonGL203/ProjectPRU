@@ -23,7 +23,10 @@ public static class GuardFrameStock
                    maxHealth = 220f, cost = 180, tint = new Color(0.62f, 0.72f, 0.9f) },
     };
 
-    public static Kind Get(FrameKind k) => Kinds[(int)k];
+    public static Kind Get(FrameKind k)
+    {
+        return Kinds[(int)k];
+    }
 
     public static ItemData Item(FrameKind k)
     {

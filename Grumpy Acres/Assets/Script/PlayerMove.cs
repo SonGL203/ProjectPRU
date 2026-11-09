@@ -35,7 +35,6 @@ public class PlayerMove : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
-        if (!GetComponent<PlayerHealth>()) gameObject.AddComponent<PlayerHealth>();
 
         if (farmZone == null)
         {
@@ -90,7 +89,10 @@ public class PlayerMove : MonoBehaviour
         Play(input == Vector2.zero ? "Idle" : "Run");
     }
 
-    void FixedUpdate() => rb.linearVelocity = input * speed;
+    void FixedUpdate()
+    {
+        rb.linearVelocity = input * speed;
+    }
 
     void Play(string action, bool restart = false)
     {

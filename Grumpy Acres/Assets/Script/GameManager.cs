@@ -1,13 +1,17 @@
 using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public enum WeekDay { Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday }
 
 [DefaultExecutionOrder(-100)]
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance { get; private set; }
-    public static bool HasInstance => Instance != null;
+    public static GameManager ManagerGame { get; private set; }
+    public static bool HasInstance
+    {
+        get { return ManagerGame != null; }
+    }
 
     [Header("Ngay trong tuan")]
     public WeekDay today = WeekDay.Monday;
@@ -16,28 +20,61 @@ public class GameManager : MonoBehaviour
 
     public event Action<WeekDay, int> OnNewDay;
 
-    public bool IsAttackDay => today == attackDay;
+    [Header("Game over (object thiet ke san trong scene)")]
+    [Tooltip("Bang Game Over: bat len khi nha bi pha, an luc dau")]
+    public GameObject gameOverPanel;
+
+    public bool IsGameOver { get; private set; }
+
+    public bool IsAttackDay
+    {
+        get { return today == attackDay; }
+    }
 
     void Awake()
     {
-        if (Instance && Instance != this) { Destroy(gameObject); return; }
-        Instance = this;
+        if (ManagerGame && ManagerGame != this) { Destroy(gameObject); return; }
+        ManagerGame = this;
     }
 
-    void Start() => OnNewDay?.Invoke(today, week);
-
-    public void PlayerDefeated()
+    void Start()
     {
-        foreach (var e in Enemy.Alive.ToArray())
-            if (e) Destroy(e.gameObject);
+        if (gameOverPanel) gameOverPanel.SetActive(false);
+        OnNewDay?.Invoke(today, week);
+    }
 
-        if (CropManager.Instance) CropManager.Instance.DestroyAllFarmland();
+    void Update()
+    {
+        if (!IsGameOver) return;
+
+        var kb = UnityEngine.InputSystem.Keyboard.current;
+        if (kb == null) return;
+        if (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame) Restart();
+    }
+
+    public void GameOver()
+    {
+        if (IsGameOver) return;
+        IsGameOver = true;
+        Time.timeScale = 0f;
+        if (gameOverPanel) gameOverPanel.SetActive(true);
+    }
+
+    void Restart()
+    {
+        Time.timeScale = 1f;
+        IsGameOver = false;
         Cowboy.RemoveAll();
         CowboyRoster.Clear();
-        Structure.RestoreAll();
 
-        if (DayNightCycle.Instance) DayNightCycle.Instance.SkipToNextMorning();
-        else NextDay();
+        // GameManager cu van con song luc GameManager moi chay Awake; bo ManagerGame cu de ban moi khong tu huy minh.
+        ManagerGame = null;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    void OnDestroy()
+    {
+        if (ManagerGame == this) ManagerGame = null;
     }
 
     public void NextDay()

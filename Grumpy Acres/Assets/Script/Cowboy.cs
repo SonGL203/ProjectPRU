@@ -19,11 +19,20 @@ public class Cowboy : MonoBehaviour
         everyone.Clear();
     }
 
-    void OnDestroy() => everyone.Remove(this);
+    void OnDestroy()
+    {
+        everyone.Remove(this);
+    }
 
-    void Vanish() => gameObject.SetActive(false);
+    void Vanish()
+    {
+        gameObject.SetActive(false);
+    }
 
-    public static System.Collections.Generic.List<Cowboy> Active => all;
+    public static System.Collections.Generic.List<Cowboy> Active
+    {
+        get { return all; }
+    }
 
     public static Cowboy Nearest(Vector3 from)
     {
@@ -43,7 +52,10 @@ public class Cowboy : MonoBehaviour
     public float deathDelay = 1f;
     public float Health { get; private set; }
     public bool IsDead { get; private set; }
-    public bool Targetable => !IsDead && !hidden && (!frame || frame.IsBroken);
+    public bool Targetable
+    {
+        get { return !IsDead && !hidden && (!frame || frame.IsBroken); }
+    }
 
     [HideInInspector] public GuardFrame frame;
     [HideInInspector] public int rosterId;
@@ -75,7 +87,10 @@ public class Cowboy : MonoBehaviour
     [Tooltip("true = canh gac ca ngay lan dem (vua mua xong la di vao khung); false = chi ban dem")]
     public bool alwaysOnDuty = false;
 
-    bool OnDuty => alwaysOnDuty || !DayNightCycle.Instance || DayNightCycle.Instance.IsNight;
+    bool OnDuty
+    {
+        get { return alwaysOnDuty || !DayNightCycle.Instance || DayNightCycle.Instance.IsNight; }
+    }
 
     void Awake()
     {
@@ -86,8 +101,14 @@ public class Cowboy : MonoBehaviour
         everyone.Add(this);
     }
 
-    void OnEnable() => all.Add(this);
-    void OnDisable() => all.Remove(this);
+    void OnEnable()
+    {
+        all.Add(this);
+    }
+    void OnDisable()
+    {
+        all.Remove(this);
+    }
 
     public void TakeDamage(float amount)
     {

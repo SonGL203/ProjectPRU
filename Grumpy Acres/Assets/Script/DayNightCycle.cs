@@ -1,10 +1,9 @@
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
-
+using System;
 public class DayNightCycle : MonoBehaviour
 {
     public Light2D globalLight;
-
     public float dawnLength = 10f;
     public float dayHold = 30f;
     public float duskLength = 20f;
@@ -15,20 +14,29 @@ public class DayNightCycle : MonoBehaviour
 
     float timer;
 
-    public event System.Action OnDusk;
+    public event  Action OnDusk;
 
-    public static DayNightCycle Instance { get; private set; }
+    public static DayNightCycle Instance { get; set; }
 
-    float DayLength => dawnLength + dayHold + duskLength + nightHold;
+    float DayLength
+    {
+        get { return dawnLength + dayHold + duskLength + nightHold; }
+    }
 
-    public bool IsNight => timer < dawnLength || timer >= dawnLength + dayHold;
+    public bool IsNight
+    {
+        get { return timer < dawnLength || timer >= dawnLength + dayHold; }
+    }
 
-    void Awake() => Instance = this;
+    void Awake()
+    {
+        Instance = this;
+    }
 
     public void SkipToNextMorning()
     {
         timer = dawnLength;
-        if (GameManager.HasInstance) GameManager.Instance.NextDay();
+        GameManager.ManagerGame.NextDay();
     }
 
     void Update()
@@ -37,7 +45,7 @@ public class DayNightCycle : MonoBehaviour
         timer = (timer + Time.deltaTime) % DayLength;
         float duskAt = dawnLength + dayHold;
         if (prev < duskAt && timer >= duskAt) OnDusk?.Invoke();
-        if (timer < prev && GameManager.HasInstance) GameManager.Instance.NextDay();
+        if (timer < prev) GameManager.ManagerGame.NextDay();
 
         float t;
         if (timer < dawnLength)

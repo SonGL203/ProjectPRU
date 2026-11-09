@@ -18,9 +18,15 @@ public class FrameVendor : MonoBehaviour
 
     bool playerInside;
 
-    int Cost => GuardFrameStock.Get(kind).cost;
+    int Cost
+    {
+        get { return GuardFrameStock.Get(kind).cost; }
+    }
 
-    void Reset() => GetComponent<Collider2D>().isTrigger = true;
+    void Reset()
+    {
+        GetComponent<Collider2D>().isTrigger = true;
+    }
 
     void Start()
     {

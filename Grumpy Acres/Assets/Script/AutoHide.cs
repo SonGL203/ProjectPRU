@@ -13,5 +13,8 @@ public class AutoHide : MonoBehaviour
         a.Invoke(nameof(Off), a.seconds);
     }
 
-    void Off() => gameObject.SetActive(false);
+    void Off()
+    {
+        gameObject.SetActive(false);
+    }
 }

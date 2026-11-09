@@ -14,7 +14,10 @@ public class GameHud : MonoBehaviour
     [Tooltip("Thong bao dat khong duoc (tuy chon)")]
     public AutoHide failPanel;
 
-    void Awake() => Instance = this;
+    void Awake()
+    {
+        Instance = this;
+    }
 
     void Start()
     {

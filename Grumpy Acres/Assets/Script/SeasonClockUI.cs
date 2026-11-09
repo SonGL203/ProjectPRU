@@ -41,9 +41,9 @@ public class SeasonClockUI : MonoBehaviour
             UpdateDisplay(SeasonManager.Instance.currentSeason);
         }
 
-        if (GameManager.Instance != null)
+        if (GameManager.ManagerGame != null)
         {
-            GameManager.Instance.OnNewDay += (today, week) =>
+            GameManager.ManagerGame.OnNewDay += (today, week) =>
             {
                 if (SeasonManager.Instance != null)
                     UpdateDisplay(SeasonManager.Instance.currentSeason);
@@ -138,7 +138,7 @@ public class SeasonClockUI : MonoBehaviour
 
         if (dayText != null)
         {
-            string weekDayStr = GameManager.Instance != null ? GetWeekDayVN(GameManager.Instance.today) : "";
+            string weekDayStr = GameManager.ManagerGame != null ? GetWeekDayVN(GameManager.ManagerGame.today) : "";
             dayText.text = $"Ngày {SeasonManager.Instance.currentDayInSeason}/{SeasonManager.Instance.daysPerSeason} ({weekDayStr}){speedDesc}";
         }
     }

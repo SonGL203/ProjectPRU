@@ -6,7 +6,10 @@ public class GuardFrame : MonoBehaviour
     public static readonly List<GuardFrame> All = new();
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    static void ResetStatics() => All.Clear();
+    static void ResetStatics()
+    {
+        All.Clear();
+    }
 
     public float maxHealth = 80f;
     [Tooltip("Cho cowboy dung ben trong khung")]
@@ -20,8 +23,14 @@ public class GuardFrame : MonoBehaviour
 
     public float Health { get; private set; }
     public bool IsBroken { get; private set; }
-    public bool Occupied => occupant && !occupant.IsDead;
-    public bool IsTargetable => Occupied && !IsBroken;
+    public bool Occupied
+    {
+        get { return occupant && !occupant.IsDead; }
+    }
+    public bool IsTargetable
+    {
+        get { return Occupied && !IsBroken; }
+    }
 
     Cowboy occupant;
     Sprite intactSprite;
@@ -39,7 +48,10 @@ public class GuardFrame : MonoBehaviour
         return best;
     }
 
-    public Vector3 ClosestPoint(Vector3 from) => fence ? (Vector3)fence.ClosestPoint(from) : transform.position;
+    public Vector3 ClosestPoint(Vector3 from)
+    {
+        return fence ? (Vector3)fence.ClosestPoint(from) : transform.position;
+    }
 
     public void ApplyKind(GuardFrameStock.Kind kind)
     {
@@ -58,16 +70,19 @@ public class GuardFrame : MonoBehaviour
     void OnEnable()
     {
         All.Add(this);
-        if (GameManager.HasInstance) GameManager.Instance.OnNewDay += HandleNewDay;
+        GameManager.ManagerGame.OnNewDay += HandleNewDay;
     }
 
     void OnDisable()
     {
         All.Remove(this);
-        if (GameManager.HasInstance) GameManager.Instance.OnNewDay -= HandleNewDay;
+        if (GameManager.HasInstance) GameManager.ManagerGame.OnNewDay -= HandleNewDay;
     }
 
-    void HandleNewDay(WeekDay day, int week) => Repair();
+    void HandleNewDay(WeekDay day, int week)
+    {
+        Repair();
+    }
 
     void Update()
     {

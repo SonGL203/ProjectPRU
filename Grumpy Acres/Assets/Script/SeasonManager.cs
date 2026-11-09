@@ -60,9 +60,9 @@ public class SeasonManager : MonoBehaviour
     void Start()
     {
         // Dang ky lang nghe su kien sang ngay moi tu GameManager
-        if (GameManager.Instance != null)
+        if (GameManager.ManagerGame != null)
         {
-            GameManager.Instance.OnNewDay += HandleNewDay;
+            GameManager.ManagerGame.OnNewDay += HandleNewDay;
         }
 
         OnSeasonChanged?.Invoke(currentSeason);
@@ -71,9 +71,9 @@ public class SeasonManager : MonoBehaviour
 
     void OnDestroy()
     {
-        if (GameManager.Instance != null)
+        if (GameManager.ManagerGame != null)
         {
-            GameManager.Instance.OnNewDay -= HandleNewDay;
+            GameManager.ManagerGame.OnNewDay -= HandleNewDay;
         }
     }
 
@@ -86,7 +86,7 @@ public class SeasonManager : MonoBehaviour
         // Phim F4: Nhay sang ngay tiep theo de test
         if (kb.f4Key.wasPressedThisFrame)
         {
-            if (GameManager.Instance != null) GameManager.Instance.NextDay();
+            if (GameManager.ManagerGame != null) GameManager.ManagerGame.NextDay();
             else AdvanceDay();
         }
 

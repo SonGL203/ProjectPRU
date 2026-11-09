@@ -20,7 +20,10 @@ public class CowboyVendor : MonoBehaviour
 
     bool playerInside;
 
-    void Reset() => GetComponent<Collider2D>().isTrigger = true;
+    void Reset()
+    {
+        GetComponent<Collider2D>().isTrigger = true;
+    }
 
     void Start()
     {

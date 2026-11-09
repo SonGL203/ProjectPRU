@@ -14,15 +14,19 @@ public class FramePlacer : MonoBehaviour
     SpriteRenderer[] ghostRenderers;
     string blocker;
 
-    public static bool Active => instance && lastActiveFrame == Time.frameCount;
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    static void Boot()
+    public static bool Active
     {
-        if (instance) return;
-        var go = new GameObject("FramePlacer");
-        DontDestroyOnLoad(go);
-        instance = go.AddComponent<FramePlacer>();
+        get { return instance && lastActiveFrame == Time.frameCount; }
+    }
+
+    void Awake()
+    {
+        instance = this;
+    }
+
+    void OnDestroy()
+    {
+        if (instance == this) instance = null;
     }
 
     GameObject Prefab

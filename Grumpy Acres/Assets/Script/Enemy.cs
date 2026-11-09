@@ -14,8 +14,6 @@ public class Enemy : MonoBehaviour
     public float attackRange = 1.2f;
     public float attackDamage = 10f;
     public float attackInterval = 1f;
-    [Tooltip("Player vao trong tam nay thi enemy bo muc tieu khac, quay sang danh player")]
-    public float playerAggroRange = 1.5f;
 
     public float MaxHealth { get; private set; }
     public float Health { get; private set; }
@@ -24,7 +22,10 @@ public class Enemy : MonoBehaviour
     public static readonly List<Enemy> Alive = new();
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    static void ResetStatics() => Alive.Clear();
+    static void ResetStatics()
+    {
+        Alive.Clear();
+    }
 
     [Tooltip("Moi enemy dang danh cung muc tieu se day muc tieu do 'xa' them bay nhieu don vi khi chon, de enemy dan trai ra")]
     public float loadPenalty = 4f;
@@ -34,8 +35,6 @@ public class Enemy : MonoBehaviour
     Rigidbody2D rb;
     Animator anim;
     SpriteRenderer sr;
-    Transform player;
-    PlayerHealth playerHealth;
     float attackTimer;
     float repathTimer;
     int pathIndex;
@@ -46,26 +45,13 @@ public class Enemy : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         sr = GetComponent<SpriteRenderer>();
-        MaxHealth = Health = baseHealth * healthMultiplier;
     }
 
-    void OnEnable() => Alive.Add(this);
-    void OnDisable()
+    void OnEnable()
     {
-        Alive.Remove(this);
-        if (playerHealth) playerHealth.Release(this);
+        Alive.Add(this);
     }
-
-    void Start()
-    {
-        var p = FindFirstObjectByType<PlayerMove>();
-        if (p)
-        {
-            player = p.transform;
-            playerHealth = p.GetComponent<PlayerHealth>();
-        }
-    }
-
+  
     public void SetMaxHealth(float value)
     {
         MaxHealth = Health = value * healthMultiplier;
@@ -81,29 +67,24 @@ public class Enemy : MonoBehaviour
 
         Vector3Int plotCell = default;
         Vector3 targetPos = default;
-        bool inRange = playerHealth && !playerHealth.IsDead &&
-                       ((Vector2)player.position - (Vector2)transform.position).magnitude <= playerAggroRange;
-        bool hitPlayer = inRange && playerHealth.TryClaim(this);
-        if (!hitPlayer && playerHealth) playerHealth.Release(this);
         retargetTimer -= Time.fixedDeltaTime;
-        if (!hitPlayer && (retargetTimer <= 0f || !KeyValid(targetKey)))
+        if (retargetTimer <= 0f || !KeyValid(targetKey))
         {
             retargetTimer = 1f;
             PickTarget();
         }
         var crops = CropManager.Instance;
-        var cowboy = hitPlayer ? null : targetKey as Cowboy;
-        var frame = hitPlayer ? null : targetKey as GuardFrame;
-        bool hasPlot = !hitPlayer && targetKey is Vector3Int && crops && crops.soilTilemap;
+        var cowboy = targetKey as Cowboy;
+        var frame = targetKey as GuardFrame;
+        bool hasPlot = targetKey is Vector3Int && crops && crops.soilTilemap;
         if (hasPlot)
         {
             plotCell = (Vector3Int)targetKey;
             targetPos = crops.soilTilemap.GetCellCenterWorld(plotCell);
         }
-        var structure = (hitPlayer || cowboy || frame || hasPlot) ? null : Structure.Current;
+        var structure = (cowboy || frame || hasPlot) ? null : Structure.Current;
 
-        if (hitPlayer) targetPos = player.position;
-        else if (cowboy) targetPos = cowboy.transform.position;
+        if (cowboy) targetPos = cowboy.transform.position;
         else if (frame) targetPos = frame.ClosestPoint(transform.position);
         else if (!hasPlot)
         {
@@ -112,7 +93,6 @@ public class Enemy : MonoBehaviour
                 var col = structure.GetComponent<Collider2D>();
                 targetPos = col ? col.ClosestPoint(transform.position) : structure.transform.position;
             }
-            else if (player) targetPos = player.position;
             else
             {
                 rb.linearVelocity = Vector2.zero;
@@ -120,7 +100,7 @@ public class Enemy : MonoBehaviour
             }
         }
 
-        bool attacking = hitPlayer || cowboy || frame || hasPlot || structure;
+        bool attacking = cowboy || frame || hasPlot || structure;
         Vector2 to = targetPos - transform.position;
         float stopAt = attacking ? attackRange : 0.8f;
         bool moving = to.magnitude > stopAt;
@@ -135,8 +115,7 @@ public class Enemy : MonoBehaviour
         {
             attackTimer = attackInterval;
             if (anim) anim.SetTrigger("Attack");
-            if (hitPlayer) playerHealth.TakeDamage(attackDamage);
-            else if (cowboy) cowboy.TakeDamage(attackDamage);
+            if (cowboy) cowboy.TakeDamage(attackDamage);
             else if (frame) frame.TakeDamage(attackDamage);
             else if (hasPlot) CropManager.Instance.DamagePlot(plotCell, attackDamage);
             else structure.TakeDamage(attackDamage);
@@ -224,7 +203,6 @@ public class Enemy : MonoBehaviour
     {
         IsDead = true;
         Alive.Remove(this);
-        if (playerHealth) playerHealth.Release(this);
         rb.linearVelocity = Vector2.zero;
         foreach (var c in GetComponents<Collider2D>()) c.enabled = false;
         if (anim) anim.SetTrigger("Die");

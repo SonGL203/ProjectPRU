@@ -9,7 +9,6 @@ public class WaveSpawner : MonoBehaviour
     [Header("Diem sinh ra (de trong thi tu lay mep trai/phai man hinh)")]
     public Transform[] leftPoints;
     public Transform[] rightPoints;
-    public float edgeMargin = 2f;
 
     [Header("So luong")]
     public int startCount = 8;
@@ -39,29 +38,14 @@ public class WaveSpawner : MonoBehaviour
     public float delayBeforeWave = 6f;
     public float spawnInterval = 0.5f;
 
-    DayNightCycle subscribedCycle;
-
     void OnEnable()
     {
-        if (GameManager.HasInstance) GameManager.Instance.OnNewDay += HandleNewDay;
-        else Debug.LogWarning("WaveSpawner: scene chua co GameManager.");
+        GameManager.ManagerGame.OnNewDay += HandleNewDay;
     }
 
     void Start()
     {
-        subscribedCycle = DayNightCycle.Instance;
-        if (subscribedCycle) subscribedCycle.OnDusk += HandleDusk;
-        else Debug.LogWarning("WaveSpawner: scene chua co DayNightCycle.");
-    }
-
-    void OnDisable()
-    {
-        if (GameManager.HasInstance) GameManager.Instance.OnNewDay -= HandleNewDay;
-    }
-
-    void OnDestroy()
-    {
-        if (subscribedCycle) subscribedCycle.OnDusk -= HandleDusk;
+        DayNightCycle.Instance.OnDusk += HandleDusk;
     }
 
     void HandleNewDay(WeekDay day, int week)
@@ -72,7 +56,7 @@ public class WaveSpawner : MonoBehaviour
 
     void HandleDusk()
     {
-        var gm = GameManager.Instance;
+        var gm = GameManager.ManagerGame;
         if (!gm || gm.today != gm.attackDay) return;
 
         StopAllCoroutines();
@@ -84,8 +68,6 @@ public class WaveSpawner : MonoBehaviour
 
     IEnumerator SpawnWave(int count, float health)
     {
-        if (enemyPrefabs.Length == 0) yield break;
-
         yield return new WaitForSeconds(delayBeforeWave);
         for (int i = 0; i < count; i++)
         {
@@ -94,7 +76,6 @@ public class WaveSpawner : MonoBehaviour
             var enemy = Instantiate(prefab, SpawnPosition(left), Quaternion.identity);
 
             var e = enemy.GetComponent<Enemy>();
-            if (!e) e = enemy.AddComponent<Enemy>();
             foreach (var rule in healthRules)
                 if (rule.prefabName == prefab.name) e.healthMultiplier = rule.multiplier;
             e.SetMaxHealth(health);
@@ -112,7 +93,7 @@ public class WaveSpawner : MonoBehaviour
         var cam = Camera.main;
         float halfH = cam.orthographicSize;
         float halfW = halfH * cam.aspect;
-        float x = cam.transform.position.x + (left ? -halfW - edgeMargin : halfW + edgeMargin);
+        float x = cam.transform.position.x + (left ? -halfW : halfW);
         float y = cam.transform.position.y + Random.Range(-halfH, halfH);
         return new Vector3(x, y, 0f);
     }

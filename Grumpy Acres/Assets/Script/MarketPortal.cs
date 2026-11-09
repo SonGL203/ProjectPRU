@@ -17,7 +17,10 @@ public class MarketPortal : MonoBehaviour
 
     bool playerInside;
 
-    void Reset() => GetComponent<Collider2D>().isTrigger = true;
+    void Reset()
+    {
+        GetComponent<Collider2D>().isTrigger = true;
+    }
 
     void OnTriggerEnter2D(Collider2D other)
     {

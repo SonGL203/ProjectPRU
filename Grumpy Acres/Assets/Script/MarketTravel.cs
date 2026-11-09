@@ -13,22 +13,31 @@ public class MarketTravel : MonoBehaviour
     public static bool InMarket { get; private set; }
     public static bool Busy { get; private set; }
 
+    void Awake()
+    {
+        inst = this;
+    }
+
     static MarketTravel Runner()
     {
-        if (!inst) inst = new GameObject("MarketTravel").AddComponent<MarketTravel>();
+        if (!inst) Debug.LogError("Scene chua co object nao gan component MarketTravel. Hay them no vao 1 object trong SampleScene.");
         return inst;
     }
 
     public static void Enter(Vector3 returnTo)
     {
         if (Busy || InMarket) return;
-        Runner().StartCoroutine(EnterRoutine(returnTo));
+        var runner = Runner();
+        if (!runner) return;
+        runner.StartCoroutine(EnterRoutine(returnTo));
     }
 
     public static void Exit()
     {
         if (Busy || !InMarket) return;
-        Runner().StartCoroutine(ExitRoutine());
+        var runner = Runner();
+        if (!runner) return;
+        runner.StartCoroutine(ExitRoutine());
     }
 
     static IEnumerator EnterRoutine(Vector3 returnTo)

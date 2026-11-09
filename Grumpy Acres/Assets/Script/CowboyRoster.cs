@@ -19,7 +19,10 @@ public static class CowboyRoster
         nextId = 1;
     }
 
-    public static int Count => entries.Count;
+    public static int Count
+    {
+        get { return entries.Count; }
+    }
 
     public static Entry Add(int tier)
     {
@@ -35,7 +38,13 @@ public static class CowboyRoster
         return null;
     }
 
-    public static void Remove(int id) => entries.RemoveAll(e => e.id == id);
+    public static void Remove(int id)
+    {
+        entries.RemoveAll(e => e.id == id);
+    }
 
-    public static void Clear() => entries.Clear();
+    public static void Clear()
+    {
+        entries.Clear();
+    }
 }

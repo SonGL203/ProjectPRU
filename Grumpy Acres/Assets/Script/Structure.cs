@@ -9,8 +9,8 @@ public class Structure : MonoBehaviour
     public int order = 1;
     public float maxHealth = 200f;
 
-    public float Health { get; private set; }
-    public bool IsDestroyed { get; private set; }
+    public float Health { get;  set; }
+    public bool IsDestroyed { get;  set; }
 
     public static Structure Current
     {
@@ -23,28 +23,19 @@ public class Structure : MonoBehaviour
         }
     }
 
-    static readonly List<Structure> everyone = new();
-
-    public static void RestoreAll()
-    {
-        foreach (var s in everyone)
-        {
-            if (!s) continue;
-            s.Health = s.maxHealth;
-            s.IsDestroyed = false;
-            s.gameObject.SetActive(true);
-        }
-    }
-
     void Awake()
     {
         Health = maxHealth;
-        everyone.Add(this);
     }
 
-    void OnDestroy() => everyone.Remove(this);
-    void OnEnable() => all.Add(this);
-    void OnDisable() => all.Remove(this);
+    void OnEnable()
+    {
+        all.Add(this);
+    }
+    void OnDisable()
+    {
+        all.Remove(this);
+    }
 
     public void TakeDamage(float amount)
     {
@@ -54,5 +45,7 @@ public class Structure : MonoBehaviour
 
         IsDestroyed = true;
         gameObject.SetActive(false);
+
+        if (Current == null) GameManager.ManagerGame.GameOver();
     }
 }
