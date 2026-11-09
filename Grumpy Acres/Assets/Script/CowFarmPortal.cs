@@ -17,6 +17,8 @@ namespace CowFarm
         static Vector3 playerReturn, cameraReturn;
         static float cameraSize;
         static bool busy;
+        public static bool IsInFarm => entrance != null;
+
         const string FarmScene = "CowFarm";
 
         void Reset() => GetComponent<BoxCollider2D>().isTrigger = true;

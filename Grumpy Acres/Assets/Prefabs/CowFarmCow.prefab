@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 10001}
   - component: {fileID: 10002}
   - component: {fileID: 10003}
+  - component: {fileID: 8300500}
   m_Layer: 0
   m_Name: CowFarmCow
   m_TagString: Untagged
@@ -104,3 +105,24 @@ BoxCollider2D:
   m_Offset: {x: 0, y: 0}
   m_Size: {x: 0.22, y: 0.15}
   m_EdgeRadius: 0
+--- !u!114 &8300500
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 10000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9e1d9fd14b847cb9baf409fc87ba8fd, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  idleFrames:
+  - {fileID: -5922754114360663000, guid: c47ce483a5ffc37429270c5ef196441a, type: 3}
+  - {fileID: -1589296601377610331, guid: c47ce483a5ffc37429270c5ef196441a, type: 3}
+  - {fileID: 1201215636998452967, guid: c47ce483a5ffc37429270c5ef196441a, type: 3}
+  - {fileID: 8911921523293518287, guid: c47ce483a5ffc37429270c5ef196441a, type: 3}
+  - {fileID: -2414581210190814732, guid: c47ce483a5ffc37429270c5ef196441a, type: 3}
+  framesPerSecond: 5
+  wanderRange: {x: 0.55, y: 0.45}
+  walkSpeed: 0.55

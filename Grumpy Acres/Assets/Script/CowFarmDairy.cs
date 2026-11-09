@@ -5,19 +5,27 @@ namespace CowFarm
 {
     public class CowFarmDairy : MonoBehaviour
     {
-        [SerializeField] Transform spawn, shop, trough;
+        [SerializeField] Transform spawn, shop, trough, waterTrough;
         [SerializeField] Transform[] milkingStalls;
-        [SerializeField] UnityEngine.UI.Text herdStatus, instructions;
-        [SerializeField] UnityEngine.UI.Button buyHayButton, buyBucketButton, sellButton, feedButton, milkButton;
+        [SerializeField] GameObject shopPanel;
+        [SerializeField] UnityEngine.UI.Text instructions;
         [SerializeField] TextMesh[] cowLabels;
-        [SerializeField] ItemData hay, emptyBucket, milk;
+        [SerializeField] ItemData hay, water, emptyBucket, milk;
         [SerializeField, Min(0.1f)] float interactionRange = 1.8f;
-        [SerializeField, Min(1f)] float baseMilkSeconds = 24f;
 
-        static float[] progress;
+        sealed class CowState
+        {
+            public bool Fed, Watered, Ready;
+            public (int year, Season season, int day) CareDay;
+        }
+
+        static CowState[] herdState;
+        (int year, Season season, int day) today;
         static InventorySystem owner;
         PlayerMove player;
+        Transform[] cows;
         int nearbyCow = -1;
+        bool shopOpen;
         string feedback;
         float feedbackUntil;
 
@@ -27,7 +35,17 @@ namespace CowFarm
         static void ResetHerd()
         {
             owner = null;
-            progress = null;
+            herdState = null;
+        }
+
+        void Awake()
+        {
+            cows = new Transform[milkingStalls.Length];
+            for (int i = 0; i < cows.Length; i++)
+            {
+                var motion = milkingStalls[i].GetComponentInChildren<CowFarmCowMotion>();
+                cows[i] = motion ? motion.transform : milkingStalls[i];
+            }
         }
 
         void Update()
@@ -35,118 +53,126 @@ namespace CowFarm
             var inventory = InventorySystem.Instance;
             var wallet = PlayerWallet.Instance;
             if (!player) player = FindFirstObjectByType<PlayerMove>();
-            if (!inventory || !wallet || !player) return;
+            var seasons = SeasonManager.Instance;
+            if (!inventory || !wallet || !player || !seasons) return;
 
-            if (owner != inventory || progress == null || progress.Length != milkingStalls.Length)
+            today = (seasons.currentYear, seasons.currentSeason, seasons.currentDayInSeason);
+            if (owner != inventory || herdState == null || herdState.Length != milkingStalls.Length)
             {
                 owner = inventory;
-                progress = new float[milkingStalls.Length];
-                for (int i = 0; i < progress.Length; i++) progress[i] = -1f;
+                herdState = new CowState[milkingStalls.Length];
+                for (int i = 0; i < herdState.Length; i++) herdState[i] = new CowState { CareDay = today };
             }
 
-            var seasons = SeasonManager.Instance;
-            var season = seasons ? seasons.currentSeason : Season.Spring;
-            float rate = season switch
+            foreach (var cow in herdState)
             {
-                Season.Spring => 1.2f,
-                Season.Summer => 0.8f,
-                Season.Autumn => 1f,
-                Season.Winter => 0.6f,
-                _ => 1f
-            };
-            for (int i = 0; i < progress.Length; i++)
-                if (progress[i] >= 0f)
-                    progress[i] = Mathf.Min(baseMilkSeconds, progress[i] + Time.deltaTime * rate);
+                if (cow.CareDay == today) continue;
+                cow.Ready |= cow.Fed && cow.Watered;
+                cow.Fed = false;
+                cow.Watered = false;
+                cow.CareDay = today;
+            }
 
             bool atShop = Near(shop);
             bool atTrough = Near(trough);
+            bool atWater = Near(waterTrough);
             nearbyCow = -1;
             float nearest = float.PositiveInfinity;
             for (int i = 0; i < milkingStalls.Length; i++)
             {
-                float distance = (player.transform.position - milkingStalls[i].position).sqrMagnitude;
-                if (!Near(milkingStalls[i]) || distance >= nearest) continue;
+                float distance = (player.transform.position - cows[i].position).sqrMagnitude;
+                if (!Near(cows[i]) || distance >= nearest) continue;
                 nearbyCow = i;
                 nearest = distance;
             }
 
-            buyHayButton.interactable = atShop;
-            buyBucketButton.interactable = atShop;
-            sellButton.interactable = atShop;
-            feedButton.interactable = atTrough && System.Array.IndexOf(progress, -1f) >= 0;
-            milkButton.interactable = nearbyCow >= 0 && progress[nearbyCow] >= baseMilkSeconds;
-
             var keys = Keyboard.current;
-            if (keys != null)
+            bool inventoryOpen = InventoryUI.Instance && InventoryUI.Instance.isOpen;
+            if (!atShop || inventoryOpen || (keys != null && keys.escapeKey.wasPressedThisFrame))
+                shopOpen = false;
+
+            if (!inventoryOpen && keys != null && keys.eKey.wasPressedThisFrame)
             {
-                if (atShop && keys.bKey.wasPressedThisFrame) BuyBucket();
-                if (atShop && keys.xKey.wasPressedThisFrame) SellMilk();
-                if (keys.fKey.wasPressedThisFrame)
-                {
-                    if (atShop) BuyHay();
-                    else if (atTrough && feedButton.interactable) FeedCow();
-                    else if (milkButton.interactable) MilkCow();
-                }
+                var selected = inventory.GetSelected();
+                var item = selected != null ? selected.item : null;
+                if (atShop) shopOpen = !shopOpen;
+                else if ((atTrough || nearbyCow >= 0) && item == hay) FeedCow(atTrough ? -1 : nearbyCow);
+                else if ((atWater || nearbyCow >= 0) && item == water) WaterCow(atWater ? -1 : nearbyCow);
+                else if (nearbyCow >= 0 && item == emptyBucket) MilkCow();
+                else if (atTrough || atWater || nearbyCow >= 0)
+                    Show("Dùng phím số để chọn đúng vật phẩm.");
             }
 
-            var herd = new System.Text.StringBuilder();
-            for (int i = 0; i < progress.Length; i++)
+            if (shopPanel.activeSelf != shopOpen) shopPanel.SetActive(shopOpen);
+
+            for (int i = 0; i < herdState.Length; i++)
             {
-                string state = progress[i] < 0f ? "Đói" :
-                    progress[i] >= baseMilkSeconds ? "Có sữa!" :
-                    $"Còn {Mathf.CeilToInt((baseMilkSeconds - progress[i]) / rate)} giây";
-                if (i > 0) herd.Append("   |   ");
-                string label = $"Bò {i + 1}: {state}";
-                herd.Append(progress[i] >= baseMilkSeconds ? $"<color=#B8FF8C>{label}</color>" : label);
-                if (cowLabels[i].text != label) cowLabels[i].text = label;
-                cowLabels[i].color = progress[i] >= baseMilkSeconds ? new Color(0.72f, 1f, 0.55f) : Color.white;
+                var cow = herdState[i];
+                string state = cow.Ready ? "Có sữa!" :
+                    cow.Fed && cow.Watered ? "Chờ ngày mới" :
+                    !cow.Fed && !cow.Watered ? "Đói, khát" :
+                    cow.Fed ? "Khát" : "Đói";
+                cowLabels[i].transform.position = cows[i].position + Vector3.up * 0.95f;
+                if (cowLabels[i].text != state) cowLabels[i].text = state;
+                cowLabels[i].color = cow.Ready ? new Color(0.72f, 1f, 0.55f) : new Color(1f, 0.88f, 0.58f);
             }
 
-            string status = herd.ToString();
-            if (herdStatus.text != status) herdStatus.text = status;
-            string hint = atShop ? $"Cỏ {hay.buyPrice}G · Xô {emptyBucket.buyPrice}G · Bán sữa +{milk.sellPrice}G." :
-                atTrough ? "Cho một con bò đang đói ăn tại máng." :
-                nearbyCow >= 0 ? "Khi bò có sữa, dùng một xô rỗng để vắt." :
-                "Đến quầy, máng cỏ hoặc đứng cạnh bò để dùng nút.";
-            string supplies = $"Cỏ: {Count(inventory, hay)}  ·  Xô: {Count(inventory, emptyBucket)}  ·  Sữa: {Count(inventory, milk)}";
-            string message = Time.time < feedbackUntil ? feedback : hint;
-            string text = $"{supplies}   |   {message}";
-            if (instructions.text != text) instructions.text = text;
+            if (!shopOpen) return;
+            string prices = $"Cỏ {hay.buyPrice}G · Nước {water.buyPrice}G · Xô {emptyBucket.buyPrice}G · Sữa +{milk.sellPrice}G";
+            string message = Time.time < feedbackUntil ? feedback : prices;
+            if (instructions.text != message) instructions.text = message;
+        }
+
+        public void BuyWater()
+        {
+            if (shopOpen && Near(shop)) Buy(InventorySystem.Instance, PlayerWallet.Instance, water);
         }
 
         public void BuyHay()
         {
-            if (Near(shop)) Buy(InventorySystem.Instance, PlayerWallet.Instance, hay);
+            if (shopOpen && Near(shop)) Buy(InventorySystem.Instance, PlayerWallet.Instance, hay);
         }
 
         public void BuyBucket()
         {
-            if (Near(shop)) Buy(InventorySystem.Instance, PlayerWallet.Instance, emptyBucket);
+            if (shopOpen && Near(shop)) Buy(InventorySystem.Instance, PlayerWallet.Instance, emptyBucket);
         }
 
         public void SellMilk()
         {
-            if (Near(shop))
+            if (shopOpen && Near(shop))
                 Exchange(InventorySystem.Instance, PlayerWallet.Instance, milk, emptyBucket, milk.sellPrice, "Đã bán sữa");
         }
 
-        public void FeedCow()
+        void FeedCow(int cowIndex)
         {
-            if (!Near(trough) || progress == null) return;
-            int hungry = System.Array.IndexOf(progress, -1f);
-            if (hungry < 0) return;
+            int hungry = cowIndex >= 0 ? cowIndex : System.Array.FindIndex(herdState, cow => !cow.Fed);
+            if (hungry >= 0 && herdState[hungry].Fed) { Show("Bò này đã ăn hôm nay."); return; }
+            if (hungry < 0) { Show("Hôm nay cả đàn đã ăn."); return; }
             var inventory = InventorySystem.Instance;
-            int slot = FindItem(inventory, hay);
-            if (slot < 0 || !inventory.RemoveFromSlot(slot)) { Show("Bạn cần cỏ khô."); return; }
-            progress[hungry] = 0f;
+            int slot = inventory.selectedHotbar;
+            if (!inventory.RemoveFromSlot(slot)) { Show("Bạn cần cỏ khô."); return; }
+            herdState[hungry].Fed = true;
             Show($"Đã cho bò {hungry + 1} ăn.");
         }
 
-        public void MilkCow()
+        void WaterCow(int cowIndex)
         {
-            if (nearbyCow < 0 || !Near(milkingStalls[nearbyCow]) || progress[nearbyCow] < baseMilkSeconds) return;
-            if (Exchange(InventorySystem.Instance, PlayerWallet.Instance, emptyBucket, milk, 0, "Đã vắt sữa"))
-                progress[nearbyCow] = -1f;
+            int thirsty = cowIndex >= 0 ? cowIndex : System.Array.FindIndex(herdState, cow => !cow.Watered);
+            if (thirsty >= 0 && herdState[thirsty].Watered) { Show("Bò này đã uống hôm nay."); return; }
+            if (thirsty < 0) { Show("Hôm nay cả đàn đã uống nước."); return; }
+            var inventory = InventorySystem.Instance;
+            if (!inventory.RemoveFromSlot(inventory.selectedHotbar)) return;
+            herdState[thirsty].Watered = true;
+            Show($"Đã cho bò {thirsty + 1} uống nước.");
+        }
+
+        void MilkCow()
+        {
+            if (nearbyCow < 0 || !Near(cows[nearbyCow])) return;
+            if (!herdState[nearbyCow].Ready) { Show("Bò này chưa có sữa hôm nay."); return; }
+            if (Exchange(InventorySystem.Instance, PlayerWallet.Instance, emptyBucket, milk, 0, "Đã vắt sữa", InventorySystem.Instance.selectedHotbar))
+                herdState[nearbyCow].Ready = false;
         }
 
         bool Near(Transform station) =>
@@ -154,14 +180,6 @@ namespace CowFarm
 
         static int FindItem(InventorySystem inventory, ItemData item) =>
             System.Array.FindIndex(inventory.slots, slot => slot != null && !slot.IsEmpty && slot.item == item);
-
-        static int Count(InventorySystem inventory, ItemData item)
-        {
-            int count = 0;
-            foreach (var slot in inventory.slots)
-                if (slot != null && !slot.IsEmpty && slot.item == item) count += slot.amount;
-            return count;
-        }
 
         static bool HasSpace(InventorySystem inventory, ItemData item) =>
             System.Array.Exists(inventory.slots, slot => slot.IsEmpty || (slot.item == item && slot.amount < item.maxStack));
@@ -174,9 +192,9 @@ namespace CowFarm
             Show("Đã mua " + item.itemName);
         }
 
-        bool Exchange(InventorySystem inventory, PlayerWallet wallet, ItemData input, ItemData output, int gold, string message)
+        bool Exchange(InventorySystem inventory, PlayerWallet wallet, ItemData input, ItemData output, int gold, string message, int index = -1)
         {
-            int index = FindItem(inventory, input);
+            if (index < 0) index = FindItem(inventory, input);
             if (index < 0) { Show("Cần " + input.itemName); return false; }
             var slot = inventory.GetSlot(index);
             if (slot.amount == 1)

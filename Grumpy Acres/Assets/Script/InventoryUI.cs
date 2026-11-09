@@ -415,10 +415,11 @@ public class InventoryUI : MonoBehaviour
         var kb = Keyboard.current;
         if (kb != null)
         {
+            bool inventoryKey = kb.eKey.wasPressedThisFrame && !CowFarm.CowFarmPortal.IsInFarm;
             if (isOpen)
             {
                 // Khi dang mo kho: Bam E, Esc, hoac X deu thoat/dong kho
-                if (kb.eKey.wasPressedThisFrame || kb.escapeKey.wasPressedThisFrame || kb.xKey.wasPressedThisFrame || kb.tabKey.wasPressedThisFrame)
+                if (inventoryKey || kb.escapeKey.wasPressedThisFrame || kb.xKey.wasPressedThisFrame || kb.tabKey.wasPressedThisFrame)
                 {
                     Close();
                 }
@@ -426,7 +427,7 @@ public class InventoryUI : MonoBehaviour
             else
             {
                 // Khi dang dong kho: Bam E hoac Tab de mo
-                if (kb.eKey.wasPressedThisFrame || kb.tabKey.wasPressedThisFrame)
+                if (inventoryKey || kb.tabKey.wasPressedThisFrame)
                 {
                     Open();
                 }
