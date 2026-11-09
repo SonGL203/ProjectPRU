@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
@@ -43,16 +43,23 @@ public class MarketStandaloneSupport : MonoBehaviour
         // 6. Trang tri dep hon voi hoa, da canh va bui co (Co - Da - Hoa)
         EnsureDecorations();
 
-        // 7. Dam bao Mua Xuan hien thi ro net o goc tren man hinh
-        EnsureSeasonHUD();
+        // 7. Don dep UI SeasonClockUI de man hinh Market luon thoang dang, khong vuong giua man hinh
+        CleanupSeasonClockUI();
 
         // 8. Khu trung lap EventSystem, Hotbar, AudioListener
         CleanupDuplicates();
     }
 
-    static void EnsureSeasonHUD()
+    static void CleanupSeasonClockUI()
     {
-        // 1. Dam bao SeasonManager hoat dong
+        // Xoa bat ky UI SeasonClock nao trong Market de man hinh hoan toan thoang dang, khong vuong giua man hinh
+        var clocks = Object.FindObjectsByType<SeasonClockUI>(FindObjectsSortMode.None);
+        foreach (var c in clocks)
+        {
+            if (c != null) Object.Destroy(c.gameObject);
+        }
+
+        // 1. Dam bao SeasonManager hoat dong ngam cho logic tro choi
         if (SeasonManager.Instance == null && Object.FindFirstObjectByType<SeasonManager>() == null)
         {
             var smGO = new GameObject("SeasonManager", typeof(SeasonManager));
@@ -62,18 +69,12 @@ public class MarketStandaloneSupport : MonoBehaviour
             sm.currentDayInSeason = 1;
         }
 
-        // 2. Dam bao DayNightCycle hoat dong
+        // 2. Dam bao DayNightCycle hoat dong ngam cho anh sang
         if (DayNightCycle.Instance == null && Object.FindFirstObjectByType<DayNightCycle>() == null)
         {
             var dncGO = new GameObject("DayNightCycle", typeof(DayNightCycle));
             var dnc = dncGO.GetComponent<DayNightCycle>();
             dnc.globalLight = Object.FindFirstObjectByType<UnityEngine.Rendering.Universal.Light2D>();
-        }
-
-        // 3. Dam bao SeasonClockUI xuat hien o goc tren phai man hinh
-        if (SeasonClockUI.Instance == null && Object.FindFirstObjectByType<SeasonClockUI>() == null)
-        {
-            new GameObject("SeasonClockUI", typeof(SeasonClockUI));
         }
     }
 
