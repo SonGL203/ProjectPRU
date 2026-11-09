@@ -19,7 +19,10 @@ namespace CowFarm
             public (int year, Season season, int day) CareDay;
         }
 
+        static CowFarmDairy activeFarm;
         static CowState[] herdState;
+        public static bool HandlesInteractKey => activeFarm && activeFarm.HasNearbyInteraction();
+
         (int year, Season season, int day) today;
         static InventorySystem owner;
         PlayerMove player;
@@ -34,6 +37,7 @@ namespace CowFarm
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetHerd()
         {
+            activeFarm = null;
             owner = null;
             herdState = null;
         }
@@ -46,6 +50,21 @@ namespace CowFarm
                 var motion = milkingStalls[i].GetComponentInChildren<CowFarmCowMotion>();
                 cows[i] = motion ? motion.transform : milkingStalls[i];
             }
+        }
+
+        void OnEnable() => activeFarm = this;
+
+        void OnDisable()
+        {
+            if (activeFarm == this) activeFarm = null;
+        }
+
+        bool HasNearbyInteraction()
+        {
+            if (Near(shop) || Near(trough) || Near(waterTrough)) return true;
+            foreach (var cow in cows)
+                if (Near(cow)) return true;
+            return false;
         }
 
         void Update()
