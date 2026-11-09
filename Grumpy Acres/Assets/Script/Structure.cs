@@ -1,51 +1,31 @@
-using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(Collider2D))]
 public class Structure : MonoBehaviour
 {
-    static readonly List<Structure> all = new();
+    public static Structure Current { get; private set; }
 
-    [Tooltip("Thu tu bi tan cong: 1 = Target 1, 2 = Target 2, ...")]
-    public int order = 1;
     public float maxHealth = 200f;
-
-    public float Health { get;  set; }
-    public bool IsDestroyed { get;  set; }
-
-    public static Structure Current
-    {
-        get
-        {
-            Structure best = null;
-            foreach (var s in all)
-                if (!s.IsDestroyed && (!best || s.order < best.order)) best = s;
-            return best;
-        }
-    }
+    public float Health { get; private set; }
 
     void Awake()
     {
+        Current = this;
         Health = maxHealth;
     }
 
-    void OnEnable()
+    void OnDestroy()
     {
-        all.Add(this);
-    }
-    void OnDisable()
-    {
-        all.Remove(this);
+        if (Current == this) Current = null;
     }
 
     public void TakeDamage(float amount)
     {
-        if (IsDestroyed) return;
         Health -= amount;
         if (Health > 0f) return;
 
-        IsDestroyed = true;
+        Current = null;
         gameObject.SetActive(false);
-
-        if (Current == null) GameManager.ManagerGame.GameOver();
+        GameManager.ManagerGame.GameOver();
     }
 }

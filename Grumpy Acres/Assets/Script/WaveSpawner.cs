@@ -76,9 +76,10 @@ public class WaveSpawner : MonoBehaviour
             var enemy = Instantiate(prefab, SpawnPosition(left), Quaternion.identity);
 
             var e = enemy.GetComponent<Enemy>();
+            float multiplier = 1f;
             foreach (var rule in healthRules)
-                if (rule.prefabName == prefab.name) e.healthMultiplier = rule.multiplier;
-            e.SetMaxHealth(health);
+                if (rule.prefabName == prefab.name) multiplier = rule.multiplier;
+            e.SetMaxHealth(health * multiplier);
 
             yield return new WaitForSeconds(spawnInterval);
         }

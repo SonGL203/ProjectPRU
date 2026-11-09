@@ -65,7 +65,6 @@ public class CowboyVendor : MonoBehaviour
     {
         if (CowboyRoster.Count >= GuardFrame.All.Count)
         {
-            Debug.Log($"[CowboyVendor] Khong thue duoc: het cho. Da thue {CowboyRoster.Count}, so chong canh dang co {GuardFrame.All.Count}. Hay dat them chong canh.");
             AutoHide.Flash(msgNoSlot);
             return false;
         }
@@ -73,13 +72,11 @@ public class CowboyVendor : MonoBehaviour
         var wallet = PlayerWallet.Instance;
         if (!wallet || !wallet.TrySpend(cost))
         {
-            Debug.Log($"[CowboyVendor] Khong thue duoc: khong du vang (can {cost}, co {(wallet ? wallet.gold : 0)}).");
             AutoHide.Flash(msgNoGold);
             return false;
         }
 
         CowboyRoster.Add(tier);
-        Debug.Log($"[CowboyVendor] Da thue cowboy tier {tier}. Cho: {CowboyRoster.Count}/{GuardFrame.All.Count}");
         AutoHide.Flash(msgHired);
         return true;
     }

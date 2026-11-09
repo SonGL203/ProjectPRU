@@ -64,7 +64,6 @@ public class GameManager : MonoBehaviour
     {
         Time.timeScale = 1f;
         IsGameOver = false;
-        Cowboy.RemoveAll();
         CowboyRoster.Clear();
 
         // GameManager cu van con song luc GameManager moi chay Awake; bo ManagerGame cu de ban moi khong tu huy minh.

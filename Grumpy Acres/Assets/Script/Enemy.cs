@@ -1,12 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(Rigidbody2D), typeof(Animator), typeof(SpriteRenderer))]
 public class Enemy : MonoBehaviour
 {
-    public float baseHealth = 30f;
-    [Tooltip("Nhan voi mau tu WaveSpawner. 1 = binh thuong, 1.5 = trau hon (cowboy ban 15 dmg: 30hp = 2 phat, 45hp = 3 phat)")]
-    public float healthMultiplier = 1f;
     public float speed = 1.5f;
     public float deathDelay = 1.2f;
 
@@ -15,9 +12,9 @@ public class Enemy : MonoBehaviour
     public float attackDamage = 10f;
     public float attackInterval = 1f;
 
-    public float MaxHealth { get; private set; }
-    public float Health { get; private set; }
-    public bool IsDead { get; private set; }
+    public float MaxHealth { get;  set; }
+    public float Health { get; set; }
+    public bool IsDead { get;  set; }
 
     public static readonly List<Enemy> Alive = new();
 
@@ -54,7 +51,7 @@ public class Enemy : MonoBehaviour
   
     public void SetMaxHealth(float value)
     {
-        MaxHealth = Health = value * healthMultiplier;
+        MaxHealth = Health = value;
     }
 
     void FixedUpdate()
@@ -90,8 +87,7 @@ public class Enemy : MonoBehaviour
         {
             if (structure)
             {
-                var col = structure.GetComponent<Collider2D>();
-                targetPos = col ? col.ClosestPoint(transform.position) : structure.transform.position;
+                targetPos = structure.GetComponent<Collider2D>().ClosestPoint(transform.position);
             }
             else
             {
@@ -100,21 +96,19 @@ public class Enemy : MonoBehaviour
             }
         }
 
-        bool attacking = cowboy || frame || hasPlot || structure;
         Vector2 to = targetPos - transform.position;
-        float stopAt = attacking ? attackRange : 0.8f;
-        bool moving = to.magnitude > stopAt;
+        bool moving = to.magnitude > attackRange;
 
         Vector2 dir = moving ? (Steer(targetPos) - (Vector2)transform.position).normalized : Vector2.zero;
-        if (sr && Mathf.Abs(dir.x) > 0.01f) sr.flipX = dir.x < 0f;
+        if (Mathf.Abs(dir.x) > 0.01f) sr.flipX = dir.x < 0f;
         rb.linearVelocity = dir * speed;
-        if (anim) anim.SetFloat("Speed", moving ? 1f : 0f);
+        anim.SetFloat("Speed", moving ? 1f : 0f);
 
         attackTimer -= Time.fixedDeltaTime;
-        if (!moving && attacking && attackTimer <= 0f)
+        if (!moving && attackTimer <= 0f)
         {
             attackTimer = attackInterval;
-            if (anim) anim.SetTrigger("Attack");
+            anim.SetTrigger("Attack");
             if (cowboy) cowboy.TakeDamage(attackDamage);
             else if (frame) frame.TakeDamage(attackDamage);
             else if (hasPlot) CropManager.Instance.DamagePlot(plotCell, attackDamage);
@@ -191,7 +185,7 @@ public class Enemy : MonoBehaviour
         if (IsDead) return;
         Health -= amount;
         if (Health <= 0f) { Die(); return; }
-        if (anim) anim.SetTrigger("Hurt");
+        anim.SetTrigger("Hurt");
     }
 
     public void Vanish()
@@ -205,7 +199,7 @@ public class Enemy : MonoBehaviour
         Alive.Remove(this);
         rb.linearVelocity = Vector2.zero;
         foreach (var c in GetComponents<Collider2D>()) c.enabled = false;
-        if (anim) anim.SetTrigger("Die");
+        anim.SetTrigger("Die");
         Destroy(gameObject, deathDelay);
     }
 }

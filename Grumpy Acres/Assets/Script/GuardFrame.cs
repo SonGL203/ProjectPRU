@@ -97,8 +97,6 @@ public class GuardFrame : MonoBehaviour
 
         var prefab = cowboyPrefabs[Mathf.Clamp(entry.tier, 0, cowboyPrefabs.Length - 1)];
         var c = Instantiate(prefab, post.position, Quaternion.identity);
-        c.standAtPlace = false;
-        c.alwaysOnDuty = false;
         c.guardPost = post;
         c.frame = this;
         c.rosterId = entry.id;

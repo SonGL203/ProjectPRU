@@ -4,7 +4,6 @@ using UnityEngine.InputSystem;
 
 public class FramePlacer : MonoBehaviour
 {
-    public float placeRange = 8f;
     public Vector2 footprint = new(2.9f, 1.5f);
     public Vector2 footprintOffset = new(0f, 0.9f);
 
@@ -41,10 +40,9 @@ public class FramePlacer : MonoBehaviour
     void Update()
     {
         var mouse = Mouse.current;
-        var player = FindFirstObjectByType<PlayerMove>();
         var cam = Camera.main;
 
-        if (mouse == null || !player || !cam || GuardFrameStock.Selected() == null || !Prefab)
+        if (mouse == null || !cam || GuardFrameStock.Selected() == null || !Prefab)
         {
             HideGhost();
             GameHud.ShowPlacing(false);
@@ -57,7 +55,7 @@ public class FramePlacer : MonoBehaviour
 
         Vector3 w = cam.ScreenToWorldPoint(mouse.position.ReadValue());
         var pos = new Vector3(Mathf.Round(w.x * 2f) / 2f, Mathf.Round(w.y * 2f) / 2f, 0f);
-        bool ok = CanPlace(pos, player.transform.position);
+        bool ok = CanPlace(pos);
 
         ghost.transform.position = pos;
         foreach (var r in ghostRenderers)
@@ -77,11 +75,9 @@ public class FramePlacer : MonoBehaviour
         }
     }
 
-    bool CanPlace(Vector3 pos, Vector3 playerPos)
+    bool CanPlace(Vector3 pos)
     {
         blocker = null;
-        if (((Vector2)pos - (Vector2)playerPos).magnitude > placeRange) { blocker = "quá xa người chơi (> " + placeRange + ")"; return false; }
-
         var hits = Physics2D.OverlapBoxAll((Vector2)pos + footprintOffset, footprint, 0f);
         foreach (var h in hits)
         {
