@@ -8,6 +8,7 @@ public enum WeekDay { Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Su
 public class GameManager : MonoBehaviour
 {
     public static GameManager ManagerGame { get; private set; }
+    public static GameManager Instance => ManagerGame;
     public static bool HasInstance
     {
         get { return ManagerGame != null; }
@@ -58,6 +59,19 @@ public class GameManager : MonoBehaviour
         IsGameOver = true;
         Time.timeScale = 0f;
         if (gameOverPanel) gameOverPanel.SetActive(true);
+    }
+
+    public void PlayerDefeated()
+    {
+        foreach (var e in Enemy.Alive.ToArray())
+            if (e) Destroy(e.gameObject);
+
+        if (CropManager.Instance) CropManager.Instance.DestroyAllFarmland();
+        Cowboy.RemoveAll();
+        CowboyRoster.Clear();
+
+        if (DayNightCycle.Instance) DayNightCycle.Instance.SkipToNextMorning();
+        else NextDay();
     }
 
     void Restart()
