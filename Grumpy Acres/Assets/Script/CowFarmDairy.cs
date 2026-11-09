@@ -73,12 +73,21 @@ namespace CowFarm
                 cow.CareDay = today;
             }
 
+            int owned = Mathf.Clamp(CowHerd.Owned, 0, milkingStalls.Length);
+            for (int i = 0; i < milkingStalls.Length; i++)
+            {
+                bool owns = i < owned;
+                if (cows[i] != milkingStalls[i] && cows[i].gameObject.activeSelf != owns)
+                    cows[i].gameObject.SetActive(owns);
+                if (cowLabels[i].gameObject.activeSelf != owns) cowLabels[i].gameObject.SetActive(owns);
+            }
+
             bool atShop = Near(shop);
             bool atTrough = Near(trough);
             bool atWater = Near(waterTrough);
             nearbyCow = -1;
             float nearest = float.PositiveInfinity;
-            for (int i = 0; i < milkingStalls.Length; i++)
+            for (int i = 0; i < owned; i++)
             {
                 float distance = (player.transform.position - cows[i].position).sqrMagnitude;
                 if (!Near(cows[i]) || distance >= nearest) continue;
@@ -146,7 +155,7 @@ namespace CowFarm
 
         void FeedCow(int cowIndex)
         {
-            int hungry = cowIndex >= 0 ? cowIndex : System.Array.FindIndex(herdState, cow => !cow.Fed);
+            int hungry = cowIndex >= 0 ? cowIndex : System.Array.FindIndex(herdState, 0, OwnedCows(), cow => !cow.Fed);
             if (hungry >= 0 && herdState[hungry].Fed) { Show("Bò này đã ăn hôm nay."); return; }
             if (hungry < 0) { Show("Hôm nay cả đàn đã ăn."); return; }
             var inventory = InventorySystem.Instance;
@@ -158,7 +167,7 @@ namespace CowFarm
 
         void WaterCow(int cowIndex)
         {
-            int thirsty = cowIndex >= 0 ? cowIndex : System.Array.FindIndex(herdState, cow => !cow.Watered);
+            int thirsty = cowIndex >= 0 ? cowIndex : System.Array.FindIndex(herdState, 0, OwnedCows(), cow => !cow.Watered);
             if (thirsty >= 0 && herdState[thirsty].Watered) { Show("Bò này đã uống hôm nay."); return; }
             if (thirsty < 0) { Show("Hôm nay cả đàn đã uống nước."); return; }
             var inventory = InventorySystem.Instance;
@@ -173,6 +182,11 @@ namespace CowFarm
             if (!herdState[nearbyCow].Ready) { Show("Bò này chưa có sữa hôm nay."); return; }
             if (Exchange(InventorySystem.Instance, PlayerWallet.Instance, emptyBucket, milk, 0, "Đã vắt sữa", InventorySystem.Instance.selectedHotbar))
                 herdState[nearbyCow].Ready = false;
+        }
+
+        int OwnedCows()
+        {
+            return Mathf.Clamp(CowHerd.Owned, 0, herdState.Length);
         }
 
         bool Near(Transform station) =>

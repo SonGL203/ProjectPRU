@@ -21936,6 +21936,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1255278273}
   m_CullTransparentMesh: 1
+--- !u!1 &1259125710
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1259125711}
+  m_Layer: 0
+  m_Name: ReturnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1259125711
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1259125710}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -2.5, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2580372113}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1275844432
 GameObject:
   m_ObjectHideFlags: 0
@@ -27436,7 +27467,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1457103734
 RectTransform:
   m_ObjectHideFlags: 0
@@ -27638,7 +27669,6 @@ MonoBehaviour:
   - {fileID: 1400648374}
   rightPoints:
   - {fileID: 629820989}
-  edgeMargin: 2
   startCount: 8
   extraPerWeek: 1
   maxCount: 20
@@ -27729,7 +27759,7 @@ MonoBehaviour:
     m_FontStyle: 1
     m_BestFit: 0
     m_MinSize: 10
-    m_MaxSize: 40
+    m_MaxSize: 72
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -33910,7 +33940,7 @@ GameObject:
   - component: {fileID: 2580372113}
   - component: {fileID: 2580372116}
   - component: {fileID: 2580372115}
-  - component: {fileID: 2580372114}
+  - component: {fileID: 2580372117}
   m_Layer: 0
   m_Name: MarketPortal_Sell
   m_TagString: Untagged
@@ -33930,23 +33960,10 @@ Transform:
   m_LocalPosition: {x: 24, y: 20.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1259125711}
   m_Father: {fileID: 2087404796}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2580372114
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2580372112}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1b36493f09ed97e428faa7568a10b282, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SceneTransition
-  targetScene: Market
-  targetSpawn: 
 --- !u!61 &2580372115
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -34052,6 +34069,20 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &2580372117
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2580372112}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5be3baf5e02ae2c40915b3ec49b133f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MarketMapPortal
+  exit: 0
+  returnPoint: {fileID: 1259125711}
 --- !u!1 &2960731630
 GameObject:
   m_ObjectHideFlags: 0
@@ -34185,11 +34216,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 18b0a108aa79762ffda850e067d8c32b, type: 3}
---- !u!4 &8723400196732120002 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 10013, guid: 18b0a108aa79762ffda850e067d8c32b, type: 3}
-  m_PrefabInstance: {fileID: 8723400196732120001}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -34212,4 +34238,4 @@ SceneRoots:
   - {fileID: 192370995}
   - {fileID: 1853130015}
   - {fileID: 1444517239}
-  - {fileID: 8723400196732120002}
+  - {fileID: 8723400196732120001}

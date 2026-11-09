@@ -40,7 +40,8 @@ public static class FishItemsDatabase
 
     public static void Initialize()
     {
-        if (initialized) return;
+        // Item tao luc chay game co the bi Unity huy khi doi scene / thoat Play, nen kiem tra lai
+        if (initialized && CarpItem != null && CarpFryItem != null && SalmonItem != null) return;
         LoadSprites();
         BuildItems();
         initialized = true;
