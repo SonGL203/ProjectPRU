@@ -204,6 +204,7 @@ public class InventoryUI : MonoBehaviour
 
     void OnDestroy()
     {
+        if (Instance == this) Instance = null;
         if (InventorySystem.Instance != null)
         {
             InventorySystem.Instance.OnChanged -= Refresh;

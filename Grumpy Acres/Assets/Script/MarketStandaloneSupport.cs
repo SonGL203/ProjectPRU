@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
@@ -46,7 +47,10 @@ public class MarketStandaloneSupport : MonoBehaviour
         // 7. Don dep UI SeasonClockUI de man hinh Market luon thoang dang, khong vuong giua man hinh
         CleanupSeasonClockUI();
 
-        // 8. Khu trung lap EventSystem, Hotbar, AudioListener
+        // 8. Dam bao thanh item HotbarUI va he thong Inventory luon hien thi day du tren man hinh
+        EnsureUI();
+
+        // 9. Khu trung lap EventSystem, Hotbar, AudioListener
         CleanupDuplicates();
     }
 
@@ -86,6 +90,61 @@ public class MarketStandaloneSupport : MonoBehaviour
             var dncGO = new GameObject("DayNightCycle", typeof(DayNightCycle));
             var dnc = dncGO.GetComponent<DayNightCycle>();
             dnc.globalLight = Object.FindFirstObjectByType<UnityEngine.Rendering.Universal.Light2D>();
+        }
+    }
+
+    static void EnsureUI()
+    {
+        // 1. Dam bao co EventSystem de tuong tac chuot / ban phim
+        var eventSystems = Object.FindObjectsByType<EventSystem>(FindObjectsSortMode.None);
+        if (eventSystems.Length == 0)
+        {
+            new GameObject("EventSystem", typeof(EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
+        }
+
+        // 2. Dam bao he thong kho do InventorySystem ton tai
+        if (InventorySystem.Instance == null && Object.FindFirstObjectByType<InventorySystem>() == null)
+        {
+            var invGO = new GameObject("InventorySystem", typeof(InventorySystem));
+            Object.DontDestroyOnLoad(invGO);
+        }
+
+        // 3. Dam bao UI Canvas de hien thi thanh item
+        var canvas = Object.FindFirstObjectByType<Canvas>();
+        GameObject canvasGO;
+        if (canvas == null)
+        {
+            canvasGO = new GameObject("InventoryCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            canvas = canvasGO.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        }
+        else
+        {
+            canvasGO = canvas.gameObject;
+        }
+
+        var scaler = canvasGO.GetComponent<CanvasScaler>();
+        if (scaler != null)
+        {
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
+        }
+
+        // 4. Dam bao thanh item HotbarUI o duoi man hinh
+        var hotbars = Object.FindObjectsByType<HotbarUI>(FindObjectsSortMode.None);
+        if (hotbars.Length == 0)
+        {
+            var hotbarGO = new GameObject("HotbarUI", typeof(RectTransform), typeof(HotbarUI));
+            hotbarGO.transform.SetParent(canvasGO.transform, false);
+        }
+
+        // 5. Dam bao InventoryUI de mo kho
+        var invUIs = Object.FindObjectsByType<InventoryUI>(FindObjectsSortMode.None);
+        if (invUIs.Length == 0)
+        {
+            var invUIGO = new GameObject("InventoryUI", typeof(RectTransform), typeof(InventoryUI));
+            invUIGO.transform.SetParent(canvasGO.transform, false);
         }
     }
 
