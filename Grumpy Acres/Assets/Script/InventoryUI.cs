@@ -180,7 +180,7 @@ public class InventoryUI : MonoBehaviour
         tooltipDescText.fontSize = 14;
         tooltipDescText.color = new Color(1f, 1f, 1f); // Trắng sáng 100%
         tooltipDescText.raycastTarget = false;
-        tooltipDescText.enableWordWrapping = true;
+        tooltipDescText.textWrappingMode = TextWrappingModes.Normal;
 
         tooltipGO.SetActive(false);
     }
