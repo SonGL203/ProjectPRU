@@ -5,11 +5,20 @@ using UnityEngine.EventSystems;
 public class MarketStandaloneSupport : MonoBehaviour
 {
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    static void OnSceneLoaded()
+    static void Init()
     {
-        var activeScene = SceneManager.GetActiveScene();
-        if (activeScene.name != "Market") return;
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        CheckActiveScene(SceneManager.GetActiveScene());
+    }
 
+    static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        CheckActiveScene(scene);
+    }
+
+    static void CheckActiveScene(Scene scene)
+    {
+        if (scene.name != "Market") return;
         SetupMarketAtRuntime();
     }
 
@@ -24,7 +33,7 @@ public class MarketStandaloneSupport : MonoBehaviour
         // 3. Dam bao vi tien PlayerWallet
         EnsureWallet();
 
-        // 4. Dam bao Player xuat hien
+        // 4. Dam bao Player xuat hien day du Sprite va Animation
         EnsurePlayer();
 
         // 5. Dam bao cac sap ban hat giong
@@ -62,7 +71,6 @@ public class MarketStandaloneSupport : MonoBehaviour
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = new Color(0.355f, 0.655f, 0.255f, 1f);
 
-            // Tao quad nen co phia sau de khong bao gio bi ho khoang den/xanh tren man hinh rong
             var bgQuad = GameObject.Find("Background_Grass_Quad");
             if (!bgQuad)
             {
@@ -93,7 +101,6 @@ public class MarketStandaloneSupport : MonoBehaviour
             var walletGO = new GameObject("PlayerWallet", typeof(PlayerWallet));
             var wallet = walletGO.GetComponent<PlayerWallet>();
             wallet.gold = 150;
-            Object.DontDestroyOnLoad(walletGO);
         }
         else if (PlayerWallet.Instance != null && PlayerWallet.Instance.gold <= 0)
         {
@@ -105,7 +112,16 @@ public class MarketStandaloneSupport : MonoBehaviour
     {
         if (Object.FindFirstObjectByType<PlayerMove>() != null) return;
 
-        // Neu mo scene Market truc tiep ma chua qua Farm, tu dong tao Player
+        // 1. Uu tien Instantiate tu Prefab trong Resources
+        var playerPrefab = Resources.Load<GameObject>("Player");
+        if (playerPrefab != null)
+        {
+            var p = Object.Instantiate(playerPrefab, new Vector3(11.385f, 2.475f, 0f), Quaternion.identity);
+            p.name = "Player";
+            return;
+        }
+
+        // 2. Fallback neu chua load duoc prefab
         var playerGO = new GameObject("Player", typeof(Rigidbody2D), typeof(BoxCollider2D), typeof(SpriteRenderer), typeof(Animator), typeof(PlayerMove), typeof(PlayerHealth));
         playerGO.transform.position = new Vector3(11.385f, 2.475f, 0f);
 
@@ -115,39 +131,15 @@ public class MarketStandaloneSupport : MonoBehaviour
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
         var box = playerGO.GetComponent<BoxCollider2D>();
-        box.size = new Vector2(0.8f, 0.8f);
-        box.offset = new Vector2(0f, -0.1f);
+        box.size = new Vector2(0.6f, 0.35f);
+        box.offset = new Vector2(0f, -0.35f);
 
         var sr = playerGO.GetComponent<SpriteRenderer>();
         sr.sortingOrder = 5;
-
-        // Gan sprite player
-        var sprites = Resources.FindObjectsOfTypeAll<Sprite>();
-        foreach (var s in sprites)
-        {
-            if (s.name == "Basic Charakter Spritesheet_0")
-            {
-                sr.sprite = s;
-                break;
-            }
-        }
-
-        // Gan animator controller neu tim thay
-        var anim = playerGO.GetComponent<Animator>();
-        var controllers = Resources.FindObjectsOfTypeAll<RuntimeAnimatorController>();
-        foreach (var c in controllers)
-        {
-            if (c.name.Contains("PlayerController"))
-            {
-                anim.runtimeAnimatorController = c;
-                break;
-            }
-        }
     }
 
     static void EnsureSeedStalls()
     {
-        // Tim cac ItemData hat giong
         ItemData tomatoSeed = null;
         ItemData carrotSeed = null;
         ItemData wheatSeed = null;
@@ -169,29 +161,30 @@ public class MarketStandaloneSupport : MonoBehaviour
             }
         }
 
-        // Gan SeedVendor len 3 SellZone_Stall hoac Stall
         var sellZones = Object.FindObjectsByType<SellZone>(FindObjectsSortMode.None);
         foreach (var sz in sellZones)
         {
             if (sz.name != "SellZone_Stall") continue;
 
-            float x = sz.transform.position.x;
             var vendor = sz.GetComponent<SeedVendor>();
             if (!vendor) vendor = sz.gameObject.AddComponent<SeedVendor>();
+            if (vendor.seedItem != null && vendor.customPrice > 0) continue;
 
-            if (x < 6f) // Sap Ca Chua (Ben trai, x ~ 3.465)
+            float x = sz.transform.position.x;
+
+            if (x < 6f)
             {
                 vendor.seedItem = tomatoSeed;
                 vendor.customPrice = 15;
                 vendor.stallName = "Sạp Hạt Giống Cà Chua";
             }
-            else if (x < 11f) // Sap Ca Rot (O giua, x ~ 8.415)
+            else if (x < 11f)
             {
                 vendor.seedItem = carrotSeed;
                 vendor.customPrice = 12;
                 vendor.stallName = "Sạp Hạt Giống Cà Rốt";
             }
-            else // Sap Lua Mi (Ben phai, x ~ 13.365)
+            else
             {
                 vendor.seedItem = wheatSeed;
                 vendor.customPrice = 8;
@@ -202,7 +195,6 @@ public class MarketStandaloneSupport : MonoBehaviour
 
     static void CleanupDuplicates()
     {
-        // 1 EventSystem duy nhat
         var eventSystems = Object.FindObjectsByType<EventSystem>(FindObjectsSortMode.None);
         if (eventSystems.Length > 1)
         {
@@ -210,7 +202,6 @@ public class MarketStandaloneSupport : MonoBehaviour
                 Object.Destroy(eventSystems[i].gameObject);
         }
 
-        // 1 AudioListener duy nhat
         var listeners = Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None);
         if (listeners.Length > 1)
         {
@@ -218,7 +209,6 @@ public class MarketStandaloneSupport : MonoBehaviour
                 Object.Destroy(listeners[i]);
         }
 
-        // 1 HotbarUI duy nhat
         var hotbars = Object.FindObjectsByType<HotbarUI>(FindObjectsSortMode.None);
         if (hotbars.Length > 1)
         {
