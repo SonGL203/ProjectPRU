@@ -93,7 +93,7 @@ public class SeedVendor : MonoBehaviour
     {
         if (seedItem == null)
         {
-            ShowToast("Chưa gán dữ liệu hạt giống!", new Color(1f, 0.4f, 0.4f));
+            ShowToast("CHƯA GÁN DỮ LIỆU HẠT GIỐNG!", new Color(1f, 0.4f, 0.4f));
             return false;
         }
 
@@ -103,14 +103,14 @@ public class SeedVendor : MonoBehaviour
         var wallet = PlayerWallet.Instance;
         if (!wallet || wallet.gold < totalCost)
         {
-            ShowToast($"✕ Không đủ vàng! Cần {totalCost} vàng (Ví có: {(wallet ? wallet.gold : 0)}v)", new Color(1f, 0.35f, 0.35f));
+            ShowToast($"✕ KHÔNG ĐỦ VÀNG! Cần {totalCost}v (Ví có: {(wallet ? wallet.gold : 0)}v)", new Color(1f, 0.35f, 0.35f));
             if (msgNoGold) AutoHide.Flash(msgNoGold);
             return false;
         }
 
         if (InventorySystem.Instance == null)
         {
-            ShowToast("Hệ thống túi đồ chưa sẵn sàng!", Color.yellow);
+            ShowToast("HỆ THỐNG TÚI ĐỒ CHƯA SẴN SÀNG!", Color.yellow);
             return false;
         }
 
@@ -122,17 +122,17 @@ public class SeedVendor : MonoBehaviour
             {
                 int partialCost = unitPrice * added;
                 wallet.TrySpend(partialCost);
-                ShowToast($"Túi chật! Chỉ mua được {added} {seedItem.itemName} (-{partialCost}v)", Color.yellow);
+                ShowToast($"TÚI CHẬT! Chỉ mua được {added} {seedItem.itemName} (-{partialCost}v)", Color.yellow);
                 if (msgBought) AutoHide.Flash(msgBought);
                 return true;
             }
-            ShowToast("✕ Túi đồ đã đầy! Hãy dọn bớt ô trống.", new Color(1f, 0.85f, 0.25f));
+            ShowToast("✕ TÚI ĐỒ ĐÃ ĐẦY! Hãy dọn bớt ô trống.", new Color(1f, 0.85f, 0.25f));
             if (msgBagFull) AutoHide.Flash(msgBagFull);
             return false;
         }
 
         wallet.TrySpend(totalCost);
-        ShowToast($"✓ Đã mua x{count} {seedItem.itemName}! (-{totalCost} vàng)", new Color(0.35f, 1f, 0.5f));
+        ShowToast($"✓ ĐÃ MUA x{count} {seedItem.itemName.ToUpper()}! (-{totalCost} VÀNG)", new Color(0.35f, 1f, 0.5f));
         if (msgBought) AutoHide.Flash(msgBought);
         return true;
     }
@@ -141,7 +141,7 @@ public class SeedVendor : MonoBehaviour
     {
         toastMessage = msg;
         toastColor = col;
-        toastTimer = 2.8f;
+        toastTimer = 3.0f;
 
         if (WaterTilemapFishPond.Instance != null)
             WaterTilemapFishPond.Instance.ShowFloatingMessage(transform.position + Vector3.up * 1.5f, msg, col);
@@ -169,13 +169,13 @@ public class SeedVendor : MonoBehaviour
         GUI.color = old;
     }
 
-    static void DrawPanel(Rect r, Color bg, Color border, float borderWidth = 2f)
+    static void DrawPanel(Rect r, Color bg, Color border, float borderWidth = 3f)
     {
-        // Shadow offset
-        DrawSolidRect(new Rect(r.x + 3f, r.y + 3f, r.width, r.height), new Color(0f, 0f, 0f, 0.45f));
-        // Outer border
+        // Bong do dam phia sau (Drop Shadow)
+        DrawSolidRect(new Rect(r.x + 4f, r.y + 4f, r.width, r.height), new Color(0f, 0f, 0f, 0.6f));
+        // Vien vien hop thoai
         DrawSolidRect(r, border);
-        // Inner body
+        // Nen ben trong
         DrawSolidRect(new Rect(r.x + borderWidth, r.y + borderWidth, r.width - borderWidth * 2f, r.height - borderWidth * 2f), bg);
     }
 
@@ -184,6 +184,7 @@ public class SeedVendor : MonoBehaviour
         Color old = style.normal.textColor;
         style.normal.textColor = shadowColor;
         GUI.Label(new Rect(r.x + offset, r.y + offset, r.width, r.height), text, style);
+        GUI.Label(new Rect(r.x - 1f, r.y + offset, r.width, r.height), text, style);
         style.normal.textColor = textColor;
         GUI.Label(r, text, style);
         style.normal.textColor = old;
@@ -193,121 +194,123 @@ public class SeedVendor : MonoBehaviour
     {
         if (Camera.main == null) return;
 
-        // Ty le phong to tu dong theo do phan giai man hinh (QHD 1440p = ~1.33x, 4K = ~2.0x)
-        float scale = Mathf.Clamp(Screen.height / 1080f, 1.0f, 2.2f);
+        // Ty le phong to tu dong theo do phan giai man hinh de chu luon to, ro net
+        float scale = Mathf.Clamp(Screen.height / 900f, 1.25f, 2.5f);
 
-        // 1. Neu player khong o trong quay, hien thi bien hieu nho World-Space tren noc sap
+        // 1. KHI PLAYER O XA: Hien thi bien hieu World-Space tren noc sap to va ro
         if (!playerInside)
         {
-            Vector3 signWorld = transform.position + Vector3.up * 1.8f;
+            Vector3 signWorld = transform.position + Vector3.up * 1.85f;
             Vector3 signScreen = Camera.main.WorldToScreenPoint(signWorld);
             if (signScreen.z > 0)
             {
-                float sw = Mathf.Round(180f * scale);
-                float sh = Mathf.Round(30f * scale);
+                float sw = Mathf.Round(220f * scale);
+                float sh = Mathf.Round(36f * scale);
                 float sx = signScreen.x - sw * 0.5f;
                 float sy = Screen.height - signScreen.y - sh * 0.5f;
 
-                DrawPanel(new Rect(sx, sy, sw, sh), new Color(0.10f, 0.13f, 0.17f, 0.90f), new Color(0.95f, 0.75f, 0.25f, 0.85f), 1.5f * scale);
+                DrawPanel(new Rect(sx, sy, sw, sh), new Color(0.08f, 0.11f, 0.16f, 0.95f), new Color(1.0f, 0.82f, 0.22f, 0.95f), 2f * scale);
 
                 var signStyle = new GUIStyle(GUI.skin.label)
                 {
-                    fontSize = Mathf.RoundToInt(13 * scale),
+                    fontSize = Mathf.RoundToInt(15 * scale),
                     fontStyle = FontStyle.Bold,
                     alignment = TextAnchor.MiddleCenter
                 };
                 string simpleName = seedItem ? seedItem.itemName : stallName;
-                DrawShadowLabel(new Rect(sx, sy, sw, sh), $"🌱 {simpleName} ({Price}v)", signStyle, new Color(1f, 0.92f, 0.4f), Color.black, 1.5f);
+                DrawShadowLabel(new Rect(sx, sy, sw, sh), $"🌱 {simpleName.ToUpper()} ({Price}v)", signStyle, new Color(1f, 0.94f, 0.45f), Color.black, 2f);
             }
             return;
         }
 
-        // 2. Player dang dung o quay: Hien thi hop thoai chi tiet, phong to ro net
-        Vector3 screen = Camera.main.WorldToScreenPoint(transform.position + Vector3.up * 1.9f);
-        if (screen.z <= 0) return;
+        // 2. KHI PLAYER DUNG VAO QUAY: Hien thi hop thoai RPG sieu to, cuc ky ro net o giua tren man hinh
+        float w = Mathf.Round(640f * scale);
+        float h = Mathf.Round(250f * scale);
+        float x = Mathf.Round((Screen.width - w) * 0.5f);
+        float y = Mathf.Round(24f * scale);
 
-        float w = Mathf.Round(480f * scale);
-        float h = Mathf.Round(200f * scale);
-        float x = Mathf.Clamp(screen.x - w * 0.5f, 15f * scale, Screen.width - w - 15f * scale);
-        float y = Mathf.Clamp(Screen.height - screen.y - h * 0.5f, 15f * scale, Screen.height - h - 15f * scale);
-
-        // Khung nen toi sang trong voi vien vang
-        Color bgCard = new Color(0.08f, 0.11f, 0.15f, 0.96f);
-        Color borderGold = new Color(0.96f, 0.78f, 0.22f, 1.0f);
-        float bw = Mathf.Round(2.5f * scale);
+        // Khung card RPG toi sang trong voi vien vang dam
+        Color bgCard = new Color(0.07f, 0.09f, 0.13f, 0.98f);
+        Color borderGold = new Color(1.0f, 0.82f, 0.22f, 1.0f);
+        float bw = Mathf.Round(3.5f * scale);
         DrawPanel(new Rect(x, y, w, h), bgCard, borderGold, bw);
 
-        // Thanh tieu de o tren cung
-        float headerH = Mathf.Round(38f * scale);
-        DrawSolidRect(new Rect(x + bw, y + bw, w - bw * 2f, headerH), new Color(0.15f, 0.20f, 0.27f, 0.98f));
-        DrawSolidRect(new Rect(x + bw, y + bw + headerH, w - bw * 2f, Mathf.Round(2f * scale)), new Color(0.96f, 0.78f, 0.22f, 0.6f));
+        // Header Banner tren cung
+        float headerH = Mathf.Round(48f * scale);
+        DrawSolidRect(new Rect(x + bw, y + bw, w - bw * 2f, headerH), new Color(0.14f, 0.19f, 0.27f, 1.0f));
+        DrawSolidRect(new Rect(x + bw, y + bw + headerH, w - bw * 2f, Mathf.Round(3f * scale)), new Color(1.0f, 0.82f, 0.22f, 0.85f));
 
         string itemName = seedItem ? seedItem.itemName : stallName;
         int unitPrice = Price;
         var wallet = PlayerWallet.Instance;
         int currentGold = wallet ? wallet.gold : 0;
 
-        // Tieu de
+        // Tieu de sap hang (Sieu to & Ruc ro)
         var headerStyle = new GUIStyle(GUI.skin.label)
         {
-            fontSize = Mathf.RoundToInt(19 * scale),
+            fontSize = Mathf.RoundToInt(23 * scale),
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter
         };
-        DrawShadowLabel(new Rect(x, y + 4f * scale, w, headerH), $"🌱 SẠP HẠT GIỐNG: {itemName.ToUpper()}", headerStyle, new Color(1f, 0.88f, 0.25f), Color.black, 2f);
+        DrawShadowLabel(new Rect(x, y + 4f * scale, w, headerH), $"🌱 SẠP HẠT GIỐNG: {itemName.ToUpper()}", headerStyle, new Color(1f, 0.92f, 0.35f), Color.black, 2.5f);
 
-        // Hang 1: Gia ban va so vang trong vi
+        // Hang 1: Gia ban va so vang hien co trong vi
         var infoStyle = new GUIStyle(GUI.skin.label)
         {
-            fontSize = Mathf.RoundToInt(15 * scale),
+            fontSize = Mathf.RoundToInt(18 * scale),
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleLeft
         };
-        float contentY = y + headerH + 10f * scale;
-        float padX = 20f * scale;
+        float contentY = y + headerH + 12f * scale;
+        float padX = 24f * scale;
 
-        DrawShadowLabel(new Rect(x + padX, contentY, (w - padX * 2f) * 0.55f, 26f * scale),
-            $"💰 Giá: {unitPrice} Vàng / hạt", infoStyle, new Color(1f, 0.95f, 0.7f), Color.black, 1.5f);
+        DrawShadowLabel(new Rect(x + padX, contentY, (w - padX * 2f) * 0.55f, 30f * scale),
+            $"💰 Giá: {unitPrice} Vàng / Hạt", infoStyle, new Color(1f, 0.95f, 0.7f), Color.black, 2f);
 
         var walletStyle = new GUIStyle(GUI.skin.label)
         {
-            fontSize = Mathf.RoundToInt(15 * scale),
+            fontSize = Mathf.RoundToInt(18 * scale),
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleRight
         };
-        DrawShadowLabel(new Rect(x + padX + (w - padX * 2f) * 0.5f, contentY, (w - padX * 2f) * 0.5f, 26f * scale),
-            $"🪙 Ví bạn: {currentGold} Vàng", walletStyle, new Color(0.4f, 0.95f, 1f), Color.black, 1.5f);
+        DrawShadowLabel(new Rect(x + padX + (w - padX * 2f) * 0.45f, contentY, (w - padX * 2f) * 0.55f, 30f * scale),
+            $"🪙 Ví bạn: {currentGold} Vàng", walletStyle, new Color(0.4f, 0.95f, 1f), Color.black, 2f);
 
-        // Hang 2 & 3: Phim bam huong dan mua hat
+        // Hang 2: Phim bam Mua 1 Hat
         var actionStyle = new GUIStyle(GUI.skin.label)
         {
-            fontSize = Mathf.RoundToInt(15 * scale),
+            fontSize = Mathf.RoundToInt(17 * scale),
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleLeft
         };
 
-        float row1Y = contentY + 30f * scale;
-        DrawSolidRect(new Rect(x + padX, row1Y, w - padX * 2f, 28f * scale), new Color(0.14f, 0.18f, 0.23f, 0.85f));
-        DrawShadowLabel(new Rect(x + padX + 10f * scale, row1Y + 2f * scale, w - padX * 2f, 24f * scale),
-            $"[ F ] hoặc [ 1 ]  :  Mua 1 Hạt  ({unitPrice} Vàng)", actionStyle, Color.white, Color.black, 1.5f);
+        float row1Y = contentY + 36f * scale;
+        float rowH = 36f * scale;
+        DrawSolidRect(new Rect(x + padX, row1Y, w - padX * 2f, rowH), new Color(0.13f, 0.17f, 0.23f, 0.95f));
+        DrawSolidRect(new Rect(x + padX, row1Y, 4f * scale, rowH), new Color(0.4f, 0.85f, 1f, 1f));
+        DrawShadowLabel(new Rect(x + padX + 14f * scale, row1Y + 3f * scale, w - padX * 2f, rowH),
+            $"[ F ] hoặc [ 1 ]  :  MUA 1 HẠT  ({unitPrice} Vàng)", actionStyle, Color.white, Color.black, 2f);
 
-        float row2Y = row1Y + 32f * scale;
-        DrawSolidRect(new Rect(x + padX, row2Y, w - padX * 2f, 28f * scale), new Color(0.14f, 0.18f, 0.23f, 0.85f));
-        DrawShadowLabel(new Rect(x + padX + 10f * scale, row2Y + 2f * scale, w - padX * 2f, 24f * scale),
-            $"[ Shift + F ] hoặc [ 5 ]  :  Mua 5 Hạt  ({unitPrice * 5} Vàng)", actionStyle, new Color(1f, 0.95f, 0.5f), Color.black, 1.5f);
+        // Hang 3: Phim bam Mua 5 Hat
+        float row2Y = row1Y + rowH + 8f * scale;
+        DrawSolidRect(new Rect(x + padX, row2Y, w - padX * 2f, rowH), new Color(0.13f, 0.17f, 0.23f, 0.95f));
+        DrawSolidRect(new Rect(x + padX, row2Y, 4f * scale, rowH), new Color(1.0f, 0.82f, 0.22f, 1f));
+        DrawShadowLabel(new Rect(x + padX + 14f * scale, row2Y + 3f * scale, w - padX * 2f, rowH),
+            $"[ SHIFT + F ] hoặc [ 5 ]  :  MUA 5 HẠT  ({unitPrice * 5} Vàng)", actionStyle, new Color(1f, 0.95f, 0.5f), Color.black, 2f);
 
-        // Hang thong bao ket qua giao dich (Toast)
+        // Hang 4: Thong bao ket qua giao dich (Toast)
         if (toastTimer > 0f && !string.IsNullOrEmpty(toastMessage))
         {
-            float toastY = row2Y + 34f * scale;
+            float toastY = row2Y + rowH + 8f * scale;
             var toastStyle = new GUIStyle(GUI.skin.label)
             {
-                fontSize = Mathf.RoundToInt(15 * scale),
+                fontSize = Mathf.RoundToInt(18 * scale),
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter
             };
-            DrawSolidRect(new Rect(x + padX, toastY, w - padX * 2f, 26f * scale), new Color(0f, 0f, 0f, 0.7f));
-            DrawShadowLabel(new Rect(x + padX, toastY, w - padX * 2f, 26f * scale), toastMessage, toastStyle, toastColor, Color.black, 1.5f);
+            DrawSolidRect(new Rect(x + padX, toastY, w - padX * 2f, 32f * scale), new Color(0.04f, 0.05f, 0.08f, 0.95f));
+            DrawSolidRect(new Rect(x + padX, toastY, w - padX * 2f, 2f * scale), toastColor);
+            DrawShadowLabel(new Rect(x + padX, toastY + 2f * scale, w - padX * 2f, 30f * scale), toastMessage, toastStyle, toastColor, Color.black, 2f);
         }
     }
 }

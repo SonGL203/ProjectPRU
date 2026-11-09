@@ -241,7 +241,7 @@ public class FishVendor : MonoBehaviour
     {
         if (!playerInside || Camera.main == null) return;
 
-        float scale = Mathf.Clamp(Screen.height / 1080f, 1.0f, 2.2f);
+        float scale = Mathf.Clamp(Screen.height / 900f, 1.25f, 2.5f);
         Vector3 screen = Camera.main.WorldToScreenPoint(transform.position + Vector3.up * 1.5f);
         if (screen.z <= 0) return;
 
@@ -281,3 +281,4 @@ public class FishVendor : MonoBehaviour
         DrawFishShadowLabel(new Rect(x + 16f * scale, y + 36f * scale, w - 32f * scale, h - 45f * scale), menuText, itemStyle, Color.white, Color.black, 1.5f);
     }
 }
+

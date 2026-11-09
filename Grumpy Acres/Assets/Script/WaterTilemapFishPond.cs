@@ -374,7 +374,7 @@ public class WaterTilemapFishPond : MonoBehaviour
     void OnGUI()
     {
         if (Camera.main == null) return;
-        float scale = Mathf.Clamp(Screen.height / 1080f, 1.0f, 2.2f);
+        float scale = Mathf.Clamp(Screen.height / 900f, 1.25f, 2.5f);
 
         // Floating texts
         var textStyle = new GUIStyle(GUI.skin.label)
@@ -449,3 +449,4 @@ public class WaterTilemapFishPond : MonoBehaviour
         }
     }
 }
+

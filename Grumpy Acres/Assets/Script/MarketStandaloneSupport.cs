@@ -76,14 +76,27 @@ public class MarketStandaloneSupport : MonoBehaviour
         {
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = new Color(0.355f, 0.655f, 0.255f, 1f);
+            cam.orthographic = true;
+            cam.orthographicSize = 5.2f; // Zoom gan lai tuong tu nhu ben nong trai SampleScene
+
+            // Gan CameraFollow de camera roll theo nhan vat nhu o ben kia
+            var follow = cam.GetComponent<CameraFollow>();
+            if (!follow) follow = cam.gameObject.AddComponent<CameraFollow>();
+            follow.smoothSpeed = 12f;
+            follow.clampToBounds = true;
+            follow.minX = 7.5f;
+            follow.maxX = 16.5f;
+            follow.minY = 4.2f;
+            follow.maxY = 7.8f;
+            follow.SnapToTarget();
 
             var bgQuad = GameObject.Find("Background_Grass_Quad");
             if (!bgQuad)
             {
                 bgQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
                 bgQuad.name = "Background_Grass_Quad";
-                bgQuad.transform.position = new Vector3(cam.transform.position.x, cam.transform.position.y, 10f);
-                bgQuad.transform.localScale = new Vector3(80f, 60f, 1f);
+                bgQuad.transform.position = new Vector3(12f, 6f, 10f);
+                bgQuad.transform.localScale = new Vector3(120f, 90f, 1f);
 
                 var collider = bgQuad.GetComponent<Collider>();
                 if (collider) Object.Destroy(collider);
@@ -351,4 +364,5 @@ public class MarketStandaloneSupport : MonoBehaviour
         }
     }
 }
+
 
