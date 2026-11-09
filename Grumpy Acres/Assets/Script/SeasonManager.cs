@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 
 public enum Season
@@ -18,7 +18,7 @@ public class SeasonManager : MonoBehaviour
     [Tooltip("Mua hien tai trong game")]
     public Season currentSeason = Season.Spring;
 
-    [Tooltip("So ngay trong moi mua (Mac dinh la 7 ngay/mua de tien test, khong hardcode de tuy y chinh trong Inspector)")]
+    [Tooltip("So ngay trong moi mua (Mac dinh la 7 ngay/mua de tien test)")]
     public int daysPerSeason = 7;
 
     [Tooltip("Ngay thu may trong mua hien tai (1..daysPerSeason)")]
@@ -55,11 +55,11 @@ public class SeasonManager : MonoBehaviour
             return;
         }
         Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
     void Start()
     {
-        // Dang ky lang nghe su kien sang ngay moi tu GameManager
         if (GameManager.Instance != null)
         {
             GameManager.Instance.OnNewDay += HandleNewDay;
@@ -135,9 +135,6 @@ public class SeasonManager : MonoBehaviour
         OnDayAdvanced?.Invoke(currentDayInSeason, currentSeason);
     }
 
-    /// <summary>
-    /// Lay he so toc do lon cua cay dua theo mua hien tai
-    /// </summary>
     public float GetCurrentGrowthMultiplier()
     {
         return currentSeason switch
@@ -168,10 +165,9 @@ public class SeasonManager : MonoBehaviour
         {
             Season.Spring => "🌸",
             Season.Summer => "☀️",
-            Season.Autumn => "🍂",
+            Season.Autumn => "🍁",
             Season.Winter => "❄️",
             _ => "🌱"
         };
     }
 }
-

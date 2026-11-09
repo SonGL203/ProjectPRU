@@ -43,8 +43,38 @@ public class MarketStandaloneSupport : MonoBehaviour
         // 6. Trang tri dep hon voi hoa, da canh va bui co (Co - Da - Hoa)
         EnsureDecorations();
 
-        // 7. Khu trung lap EventSystem, Hotbar, AudioListener
+        // 7. Dam bao Mua Xuan hien thi ro net o goc tren man hinh
+        EnsureSeasonHUD();
+
+        // 8. Khu trung lap EventSystem, Hotbar, AudioListener
         CleanupDuplicates();
+    }
+
+    static void EnsureSeasonHUD()
+    {
+        // 1. Dam bao SeasonManager hoat dong
+        if (SeasonManager.Instance == null && Object.FindFirstObjectByType<SeasonManager>() == null)
+        {
+            var smGO = new GameObject("SeasonManager", typeof(SeasonManager));
+            var sm = smGO.GetComponent<SeasonManager>();
+            sm.currentSeason = Season.Spring;
+            sm.daysPerSeason = 7;
+            sm.currentDayInSeason = 1;
+        }
+
+        // 2. Dam bao DayNightCycle hoat dong
+        if (DayNightCycle.Instance == null && Object.FindFirstObjectByType<DayNightCycle>() == null)
+        {
+            var dncGO = new GameObject("DayNightCycle", typeof(DayNightCycle));
+            var dnc = dncGO.GetComponent<DayNightCycle>();
+            dnc.globalLight = Object.FindFirstObjectByType<UnityEngine.Rendering.Universal.Light2D>();
+        }
+
+        // 3. Dam bao SeasonClockUI xuat hien o goc tren phai man hinh
+        if (SeasonClockUI.Instance == null && Object.FindFirstObjectByType<SeasonClockUI>() == null)
+        {
+            new GameObject("SeasonClockUI", typeof(SeasonClockUI));
+        }
     }
 
     static void CleanupOldBlockers()
@@ -364,5 +394,6 @@ public class MarketStandaloneSupport : MonoBehaviour
         }
     }
 }
+
 
 
