@@ -1,8 +1,9 @@
+#if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 
-public class SetupMarketStalls : MonoBehaviour
+public static class SetupMarketStalls
 {
     [MenuItem("Tools/Farm/Cai dat cho Market va Sap hat giong")]
     public static void Setup()
@@ -17,3 +18,4 @@ public class SetupMarketStalls : MonoBehaviour
         Debug.Log(">>> [SetupMarketStalls] Da cai dat thanh cong 3 sap ban hat giong (Ca chua, Ca rot, Lua mi) trong scene Market!");
     }
 }
+#endif
