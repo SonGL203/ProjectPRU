@@ -14,5 +14,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/CowboyMarket.unity
     guid: 89dc30d6fea2b9049878050811615917
+  - enabled: 1
+    path: Assets/Scenes/CowFarm.unity
+    guid: 7141713d9b8c9c853e1b8252e4cc7256
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}

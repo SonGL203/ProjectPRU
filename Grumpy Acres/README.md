@@ -10,6 +10,7 @@ Tài liệu này tổng hợp toàn bộ hệ thống kinh tế trong game (Nôn
 3. [Hệ Thống Kinh Tế: Thủy Sản (Cá & Dụng Cụ Nuôi)](#3-hệ-thống-kinh-tế-thủy-sản-cá--dụng-cụ-nuôi)
 4. [Hệ Thống Thuê Cowboy Phòng Thủ (Cowboy Vendors)](#4-hệ-thống-thuê-cowboy-phòng-thủ-cowboy-vendors)
 5. [Chu Trình Ngày Đêm & Mùa Vụ (Day-Night & Seasons)](#5-chu-trình-ngày-đêm--mùa-vụ-day-night--seasons)
+6. [Trại bò và bán sữa (CowFarm)](#6-trại-bò-và-bán-sữa-cowfarm)
 
 ---
 
@@ -94,3 +95,29 @@ Dành riêng cho Team Dev và QA Tester thao tác nhanh trong màn chơi (`Sampl
   - **Mùa Thu (Thu)**: Mùa thu hoạch vàng, sương mù nhẹ.
   - **Mùa Đông (Đông)**: Giá lạnh, đêm dài hơn ngày, quái vật hung hãn hơn.
 
+---
+
+## 6. Trại bò và bán sữa (CowFarm)
+
+Trại bò là scene riêng ở phía đông SampleScene. Lối vào phía tây dẫn đến bãi chăn có hàng rào, chuồng, máng cỏ, máng nước, bốn vị trí vắt sữa và quầy mua bán. Scene dùng chung Player, túi đồ, ví, HUD và lịch mùa của SampleScene.
+
+| Vật phẩm | Giá | Cách dùng |
+| --- | ---: | --- |
+| Cỏ khô | 8 vàng/bó | Mỗi lượt cho một con bò ăn tốn một bó. |
+| Nước | 3 vàng/phần | Mỗi lượt cho một con bò uống tốn một phần nước. |
+| Xô rỗng | 12 vàng/xô | Mua một lần và dùng lại sau mỗi lượt bán. |
+| Xô sữa | Bán 22 vàng/xô | Bán sữa trả lại xô rỗng, lãi 11 vàng/lượt sau chi phí cỏ và nước. |
+
+### Chu kỳ cho sữa theo ngày
+
+Mỗi ngày, mỗi con bò cần một bó cỏ khô và một phần nước mua ở chợ. Bấm **E** cạnh bò để chăm sóc đúng con đó. Khi dùng cỏ tại máng cỏ hoặc nước tại máng nước, thao tác chăm sóc con đầu tiên còn thiếu bước tương ứng. Khi đã ăn và uống đủ, bò hiện **Chờ ngày mới**. Khi lịch game sang ngày tiếp theo, bò hiện **Có sữa!** và có thể vắt một xô. Sữa chưa vắt được giữ lại qua ngày và không cộng dồn. Sau khi vắt, tiếp tục chăm sóc để chuẩn bị sữa cho ngày kế tiếp.
+
+Cow Farm dùng ngày, mùa và năm từ `SeasonManager`. Quy tắc một xô mỗi ngày áp dụng qua cả bốn mùa, kể cả khi đổi mùa hoặc năm. Trạng thái đàn bò được giữ khi đi về SampleScene và quay lại trong cùng phiên chơi. Bò đi quanh vị trí ban đầu trong chuồng và nghỉ giữa các lượt. Hình ảnh dùng các frame từ bộ Free Cow Sprites. Tốc độ và phạm vi đi có thể chỉnh trên prefab CowFarmCow.
+
+### Chơi thử trong Unity
+
+Cổng biển **Cow Farm** nằm ở cuối đường đất phía đông SampleScene. Prefab có sẵn điểm quay về ở bên trái cổng. Scene CowFarm đã được bật trong Build Profiles → Scene List.
+
+1. Bấm Play từ `SampleScene` và đi qua cổng đông khi không còn quái. Dùng `F2` để nạp tiền test nếu cần.
+2. Đứng gần quầy và bấm **E** để mở chợ, rồi mua cỏ, nước và xô bằng các nút có ảnh vật phẩm. Khi chợ đóng, trạng thái hiện ngay phía trên từng con bò. Bấm **E** lần nữa hoặc đi xa quầy để đóng chợ. Trong trại, dùng **Tab** để mở túi và đưa vật phẩm xuống hotbar. Dùng **1–9, 0** để chọn ô, rồi bấm **E** với cỏ tại máng cỏ hoặc nước tại máng nước. Bạn cũng có thể dùng cỏ và nước trực tiếp cạnh từng con bò. Khi bò hiện **Chờ ngày mới**, đợi lịch sang ngày hoặc dùng **F4**. Đứng cạnh bò hiện **Có sữa!**, chọn xô rỗng và bấm **E**. Về quầy, mở chợ và bấm **Bán sữa** để nhận 22 vàng và lấy lại xô.
+3. Thử chỉ cho ăn hoặc chỉ cho uống rồi qua ngày, kiểm tra bò chưa có sữa. Thử vắt hai lần trong cùng ngày, kiểm tra mỗi bò chỉ cho một xô. Thử về SampleScene và quay lại để kiểm tra trạng thái đàn.
