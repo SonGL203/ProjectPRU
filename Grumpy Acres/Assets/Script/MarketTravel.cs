@@ -20,7 +20,8 @@ public class MarketTravel : MonoBehaviour
 
     static MarketTravel Runner()
     {
-        if (!inst) Debug.LogError("Scene chua co object nao gan component MarketTravel. Hay them no vao 1 object trong SampleScene.");
+        // Scene khong co san thi tu tao object chay coroutine
+        if (!inst) inst = new GameObject("MarketTravel").AddComponent<MarketTravel>();
         return inst;
     }
 

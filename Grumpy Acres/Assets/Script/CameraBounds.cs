@@ -2,7 +2,7 @@ using UnityEngine;
 
 // Gan len Main Camera:
 // - Chan nguoi choi khong chay ra ngoai vung CameraBoundsArea (ban do).
-// - Giu camera khong lo ra ngoai vung nho nhat dang chua nguoi choi.
+// - Giu camera khong lo ra ngoai chinh vung do (vung lon nhat chua nguoi choi).
 [DefaultExecutionOrder(1000)]
 [RequireComponent(typeof(Camera))]
 public class CameraBounds : MonoBehaviour
@@ -31,17 +31,19 @@ public class CameraBounds : MonoBehaviour
             hasLastPlayerRect = false;
         }
 
-        KeepPlayerInside();
-        KeepCameraInside();
+        Rect limit;
+        if (!KeepPlayerInside(out limit)) return;
+        KeepCameraInside(limit);
     }
 
-    void KeepPlayerInside()
+    // Tra ve vung gioi han dang ap dung (vung lon nhat chua nguoi choi, hoac vung gan nhat ho vua o)
+    bool KeepPlayerInside(out Rect limit)
     {
         Vector2 position = player.transform.position;
 
         // Gioi han nguoi choi = vung lon nhat dang chua nguoi choi (de khong bi nhot trong vung con)
         bool found = false;
-        Rect limit = new Rect();
+        limit = new Rect();
         float largest = -1f;
         foreach (var area in CameraBoundsArea.All)
         {
@@ -65,7 +67,7 @@ public class CameraBounds : MonoBehaviour
         }
         else
         {
-            return;
+            return false;
         }
 
         float minX = limit.xMin + playerMargin;
@@ -76,7 +78,7 @@ public class CameraBounds : MonoBehaviour
         if (minY > maxY) minY = maxY = limit.center.y;
 
         Vector2 clamped = new Vector2(Mathf.Clamp(position.x, minX, maxX), Mathf.Clamp(position.y, minY, maxY));
-        if (clamped == position) return;
+        if (clamped == position) return true;
 
         player.transform.position = new Vector3(clamped.x, clamped.y, player.transform.position.z);
         if (playerBody)
@@ -87,26 +89,11 @@ public class CameraBounds : MonoBehaviour
             if (!Mathf.Approximately(clamped.y, position.y)) velocity.y = 0f;
             playerBody.linearVelocity = velocity;
         }
+        return true;
     }
 
-    void KeepCameraInside()
+    void KeepCameraInside(Rect best)
     {
-        Vector2 position = player.transform.position;
-        bool found = false;
-        Rect best = new Rect();
-        float bestArea = float.PositiveInfinity;
-        foreach (var area in CameraBoundsArea.All)
-        {
-            Rect rect = area.GetRect();
-            if (!rect.Contains(position)) continue;
-            float size = rect.width * rect.height;
-            if (size >= bestArea) continue;
-            best = rect;
-            bestArea = size;
-            found = true;
-        }
-        if (!found) return;
-
         float halfHeight = cam.orthographicSize;
         float halfWidth = halfHeight * cam.aspect;
         Vector3 view = transform.position;
