@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
-using UnityEngine.SceneManagement;
 
 public static class InventoryBootstrap
 {
@@ -74,9 +73,6 @@ public static class InventoryBootstrap
         var existingHotbar = Object.FindFirstObjectByType<HotbarUI>();
         var existingInvUI  = Object.FindFirstObjectByType<InventoryUI>();
 
-        string activeScene = SceneManager.GetActiveScene().name;
-        bool isMarket = activeScene == "Market" || activeScene == "CowboyMarket";
-
         if (existingHotbar == null || existingInvUI == null)
         {
             var canvas = Object.FindFirstObjectByType<Canvas>();
@@ -114,8 +110,8 @@ public static class InventoryBootstrap
                 invUIGO.transform.SetParent(canvasGO.transform, false);
             }
 
-            // Kiem tra SeasonClockUI (Khong sinh tren Market de tranh che giua man hinh)
-            if (!isMarket && Object.FindFirstObjectByType<SeasonClockUI>() == null)
+            // Kiem tra SeasonClockUI
+            if (Object.FindFirstObjectByType<SeasonClockUI>() == null)
             {
                 var clockGO = new GameObject("SeasonClockUI", typeof(RectTransform), typeof(SeasonClockUI));
                 clockGO.transform.SetParent(canvasGO.transform, false);
@@ -123,8 +119,8 @@ public static class InventoryBootstrap
         }
         else
         {
-            // Neu da co san Canvas trong scene, dam bao co SeasonClockUI (ngoai tru Market)
-            if (!isMarket && Object.FindFirstObjectByType<SeasonClockUI>() == null)
+            // Neu da co san Canvas trong scene, dam bao co SeasonClockUI
+            if (Object.FindFirstObjectByType<SeasonClockUI>() == null)
             {
                 var canvas = Object.FindFirstObjectByType<Canvas>();
                 if (canvas != null)
@@ -136,3 +132,4 @@ public static class InventoryBootstrap
         }
     }
 }
+

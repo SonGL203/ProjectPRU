@@ -1,6 +1,5 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 using TMPro;
 
 public class SeasonClockUI : MonoBehaviour
@@ -14,13 +13,6 @@ public class SeasonClockUI : MonoBehaviour
 
     void Awake()
     {
-        string scene = SceneManager.GetActiveScene().name;
-        if (scene == "Market" || scene == "CowboyMarket")
-        {
-            Destroy(gameObject);
-            return;
-        }
-
         Instance = this;
 
         // Neu da keo san Text trong Inspector (hoac co san con trong GameObject) thi khong can code sinh UI nua
@@ -69,27 +61,16 @@ public class SeasonClockUI : MonoBehaviour
 
     void BuildUI()
     {
-        // Dam bao goc cha nam o goc tren ben phai
-        var rootRT = GetComponent<RectTransform>();
-        if (rootRT != null)
-        {
-            rootRT.anchorMin = new Vector2(1f, 1f);
-            rootRT.anchorMax = new Vector2(1f, 1f);
-            rootRT.pivot = new Vector2(1f, 1f);
-            rootRT.anchoredPosition = new Vector2(-15f, -15f);
-            rootRT.sizeDelta = new Vector2(160f, 48f);
-        }
-
         // 1. Tao Panel o goc tren ben phai man hinh (Top-Right) nho gon
         var panelGO = new GameObject("SeasonClockPanel", typeof(RectTransform), typeof(Image));
         panelGO.transform.SetParent(transform, false);
 
         var panelRT = panelGO.GetComponent<RectTransform>();
-        panelRT.anchorMin = Vector2.zero;
-        panelRT.anchorMax = Vector2.one;
+        panelRT.anchorMin = new Vector2(1f, 1f);
+        panelRT.anchorMax = new Vector2(1f, 1f);
         panelRT.pivot = new Vector2(1f, 1f);
-        panelRT.anchoredPosition = Vector2.zero;
-        panelRT.sizeDelta = Vector2.zero;
+        panelRT.anchoredPosition = new Vector2(-12f, -12f);
+        panelRT.sizeDelta = new Vector2(160f, 48f); // Thu nho panel gon gang
 
         var panelImg = panelGO.GetComponent<Image>();
         panelImg.color = new Color(0.12f, 0.12f, 0.16f, 0.82f);
@@ -177,3 +158,4 @@ public class SeasonClockUI : MonoBehaviour
         };
     }
 }
+
