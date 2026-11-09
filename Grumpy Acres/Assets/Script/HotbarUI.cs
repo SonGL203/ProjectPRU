@@ -28,6 +28,11 @@ public class HotbarUI : MonoBehaviour
 
     void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
         Instance = this;
 
         // Stretch RectTransform cha de anchor bottom-center hoat dong dung
@@ -60,6 +65,11 @@ public class HotbarUI : MonoBehaviour
 #endif
 
         Build();
+    }
+
+    void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
     }
 
     void Build()

@@ -5,6 +5,8 @@ using UnityEngine.Tilemaps;
 [RequireComponent(typeof(Rigidbody2D), typeof(Animator))]
 public class PlayerMove : MonoBehaviour
 {
+    public static PlayerMove Instance { get; private set; }
+
     public float speed = 4f;
     public float hoeTime = 0.4f;
 
@@ -33,6 +35,14 @@ public class PlayerMove : MonoBehaviour
 
     void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         if (!GetComponent<PlayerHealth>()) gameObject.AddComponent<PlayerHealth>();
@@ -41,6 +51,34 @@ public class PlayerMove : MonoBehaviour
         {
             var fzGO = GameObject.Find("FarmZone");
             if (fzGO != null) farmZone = fzGO.GetComponent<Tilemap>();
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+    }
+
+    void OnEnable()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    void OnDisable()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+    {
+        if (scene.name == "SampleScene")
+        {
+            var soilGO = GameObject.Find("Soil");
+            if (soilGO) soil = soilGO.GetComponent<Tilemap>();
+            var groundGO = GameObject.Find("Ground");
+            if (groundGO) ground = groundGO.GetComponent<Tilemap>();
+            var fzGO = GameObject.Find("FarmZone");
+            if (fzGO) farmZone = fzGO.GetComponent<Tilemap>();
         }
     }
 

@@ -7,8 +7,14 @@ public static class InventoryBootstrap
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void AutoInit()
     {
-        // 1. Kiem tra EventSystem
-        if (Object.FindFirstObjectByType<EventSystem>() == null)
+        // 1. Kiem tra va giu duy nhat 1 EventSystem
+        var eventSystems = Object.FindObjectsByType<EventSystem>(FindObjectsSortMode.None);
+        if (eventSystems.Length > 1)
+        {
+            for (int i = 1; i < eventSystems.Length; i++)
+                Object.Destroy(eventSystems[i].gameObject);
+        }
+        else if (eventSystems.Length == 0)
         {
             var esGO = new GameObject("EventSystem", typeof(EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
             Object.DontDestroyOnLoad(esGO);
@@ -69,7 +75,14 @@ public static class InventoryBootstrap
             }
         }
 
-        // 3. Kiem tra UI Canvas
+        // 3. Kiem tra UI Canvas va giu dung 1 HotbarUI duy nhat o duoi man hinh
+        var existingHotbars = Object.FindObjectsByType<HotbarUI>(FindObjectsSortMode.None);
+        if (existingHotbars.Length > 1)
+        {
+            for (int i = 1; i < existingHotbars.Length; i++)
+                Object.Destroy(existingHotbars[i].gameObject);
+        }
+
         var existingHotbar = Object.FindFirstObjectByType<HotbarUI>();
         var existingInvUI  = Object.FindFirstObjectByType<InventoryUI>();
 
@@ -89,7 +102,6 @@ public static class InventoryBootstrap
                 canvasGO = canvas.gameObject;
             }
 
-            // Dam bao Canvas Scaler luon dung ScaleWithScreenSize
             var scaler = canvasGO.GetComponent<CanvasScaler>();
             if (scaler != null)
             {
@@ -110,7 +122,6 @@ public static class InventoryBootstrap
                 invUIGO.transform.SetParent(canvasGO.transform, false);
             }
 
-            // Kiem tra SeasonClockUI
             if (Object.FindFirstObjectByType<SeasonClockUI>() == null)
             {
                 var clockGO = new GameObject("SeasonClockUI", typeof(RectTransform), typeof(SeasonClockUI));
@@ -119,7 +130,6 @@ public static class InventoryBootstrap
         }
         else
         {
-            // Neu da co san Canvas trong scene, dam bao co SeasonClockUI
             if (Object.FindFirstObjectByType<SeasonClockUI>() == null)
             {
                 var canvas = Object.FindFirstObjectByType<Canvas>();
@@ -132,4 +142,3 @@ public static class InventoryBootstrap
         }
     }
 }
-
