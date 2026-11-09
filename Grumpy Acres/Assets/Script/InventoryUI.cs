@@ -28,10 +28,12 @@ public class InventoryUI : MonoBehaviour
     GameObject windowPanel;
     SlotUI[] gridSlots;
 
-    // Tooltip Info Box (vung duoi cung cua cua so)
-    TextMeshProUGUI infoTitleText;
-    TextMeshProUGUI infoTypeText;
-    TextMeshProUGUI infoDescText;
+    // Tooltip Hover Floating Box (Bay theo chuot / hien ngay tren item)
+    GameObject tooltipGO;
+    RectTransform tooltipRT;
+    TextMeshProUGUI tooltipTitleText;
+    TextMeshProUGUI tooltipTypeText;
+    TextMeshProUGUI tooltipDescText;
 
     // Tien vang trong kho
     TextMeshProUGUI goldAmountText;
@@ -102,6 +104,85 @@ public class InventoryUI : MonoBehaviour
         }
 
         BuildHeldItemCursor();
+        BuildTooltipFloating();
+    }
+
+    void BuildTooltipFloating()
+    {
+        tooltipGO = new GameObject("TooltipHoverBox", typeof(RectTransform), typeof(Image), typeof(Outline));
+        // Đặt cha trực tiếp lên rootCanvas hoặc GameObject này để hiển thị trên cùng
+        Transform parentTransform = rootCanvas != null ? rootCanvas.transform : transform;
+        tooltipGO.transform.SetParent(parentTransform, false);
+
+        tooltipRT = tooltipGO.GetComponent<RectTransform>();
+        tooltipRT.anchorMin = new Vector2(0f, 0f);
+        tooltipRT.anchorMax = new Vector2(0f, 0f);
+        tooltipRT.pivot     = new Vector2(0f, 0f); // Pivot góc dưới trái để bay phía trên con trỏ chuột
+        tooltipRT.sizeDelta = new Vector2(290f, 135f);
+
+        var bgImg = tooltipGO.GetComponent<Image>();
+        bgImg.color = new Color(0.10f, 0.07f, 0.05f, 0.96f); // Nền gỗ nâu đậm pixel art sang trọng
+        bgImg.raycastTarget = false;
+
+        var outline = tooltipGO.GetComponent<Outline>();
+        outline.effectColor = new Color(0.9f, 0.8f, 0.55f, 1f); // Viền vàng sáng rõ ràng
+        outline.effectDistance = new Vector2(2f, -2f);
+
+        // Tim font LiberationSans SDF mac dinh neu co
+        TMP_FontAsset defaultFont = Resources.Load<TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
+
+        // 1. Tiêu đề (Tên vật phẩm)
+        var titleGO = new GameObject("Title", typeof(RectTransform), typeof(TextMeshProUGUI));
+        titleGO.transform.SetParent(tooltipGO.transform, false);
+        var titleRT = titleGO.GetComponent<RectTransform>();
+        titleRT.anchorMin = new Vector2(0f, 1f);
+        titleRT.anchorMax = new Vector2(1f, 1f);
+        titleRT.pivot     = new Vector2(0f, 1f);
+        titleRT.anchoredPosition = new Vector2(12f, -10f);
+        titleRT.sizeDelta = new Vector2(-24f, 26f);
+
+        tooltipTitleText = titleGO.GetComponent<TextMeshProUGUI>();
+        if (defaultFont != null) tooltipTitleText.font = defaultFont;
+        tooltipTitleText.fontSize = 18;
+        tooltipTitleText.fontStyle = FontStyles.Bold;
+        tooltipTitleText.color = new Color(1f, 0.95f, 0.6f);
+        tooltipTitleText.raycastTarget = false;
+
+        // 2. Phân loại / Thông số phụ
+        var typeGO = new GameObject("Type", typeof(RectTransform), typeof(TextMeshProUGUI));
+        typeGO.transform.SetParent(tooltipGO.transform, false);
+        var typeRT = typeGO.GetComponent<RectTransform>();
+        typeRT.anchorMin = new Vector2(0f, 1f);
+        typeRT.anchorMax = new Vector2(1f, 1f);
+        typeRT.pivot     = new Vector2(0f, 1f);
+        typeRT.anchoredPosition = new Vector2(12f, -38f);
+        typeRT.sizeDelta = new Vector2(-24f, 20f);
+
+        tooltipTypeText = typeGO.GetComponent<TextMeshProUGUI>();
+        if (defaultFont != null) tooltipTypeText.font = defaultFont;
+        tooltipTypeText.fontSize = 14;
+        tooltipTypeText.fontStyle = FontStyles.Bold;
+        tooltipTypeText.color = new Color(0.55f, 0.95f, 0.55f);
+        tooltipTypeText.raycastTarget = false;
+
+        // 3. Mô tả chi tiết
+        var descGO = new GameObject("Desc", typeof(RectTransform), typeof(TextMeshProUGUI));
+        descGO.transform.SetParent(tooltipGO.transform, false);
+        var descRT = descGO.GetComponent<RectTransform>();
+        descRT.anchorMin = new Vector2(0f, 0f);
+        descRT.anchorMax = new Vector2(1f, 1f);
+        descRT.pivot     = new Vector2(0f, 0f);
+        descRT.offsetMin = new Vector2(12f, 10f);
+        descRT.offsetMax = new Vector2(-12f, -62f);
+
+        tooltipDescText = descGO.GetComponent<TextMeshProUGUI>();
+        if (defaultFont != null) tooltipDescText.font = defaultFont;
+        tooltipDescText.fontSize = 14;
+        tooltipDescText.color = new Color(1f, 1f, 1f); // Trắng sáng 100%
+        tooltipDescText.raycastTarget = false;
+        tooltipDescText.enableWordWrapping = true;
+
+        tooltipGO.SetActive(false);
     }
 
     void Start()
@@ -258,63 +339,6 @@ public class InventoryUI : MonoBehaviour
             }
         }
 
-        // 3. Info / Tooltip Box o nua duoi cua so (y: 80 to 98)
-        var infoBoxGO = new GameObject("InfoBox", typeof(RectTransform));
-        infoBoxGO.transform.SetParent(windowPanel.transform, false);
-        var infoRT = infoBoxGO.GetComponent<RectTransform>();
-        infoRT.anchorMin = new Vector2(0f, 1f);
-        infoRT.anchorMax = new Vector2(0f, 1f);
-        infoRT.pivot     = new Vector2(0f, 1f);
-        infoRT.anchoredPosition = new Vector2(10f * pixelScale, -81f * pixelScale);
-        infoRT.sizeDelta        = new Vector2(80f * pixelScale, 17f * pixelScale);
-
-        // Ten vat pham
-        var titleGO = new GameObject("Title", typeof(RectTransform), typeof(TextMeshProUGUI));
-        titleGO.transform.SetParent(infoBoxGO.transform, false);
-        var titleRT = titleGO.GetComponent<RectTransform>();
-        titleRT.anchorMin = new Vector2(0f, 1f);
-        titleRT.anchorMax = new Vector2(1f, 1f);
-        titleRT.pivot     = new Vector2(0f, 1f);
-        titleRT.anchoredPosition = new Vector2(0, 0);
-        titleRT.sizeDelta = new Vector2(0, 16);
-        infoTitleText = titleGO.GetComponent<TextMeshProUGUI>();
-        infoTitleText.fontSize = 12;
-        infoTitleText.fontStyle = FontStyles.Bold;
-        infoTitleText.color = new Color(0.25f, 0.15f, 0.1f);
-        infoTitleText.raycastTarget = false;
-        infoTitleText.text = "";
-
-        // Loai vat pham
-        var typeGO = new GameObject("Type", typeof(RectTransform), typeof(TextMeshProUGUI));
-        typeGO.transform.SetParent(infoBoxGO.transform, false);
-        var typeRT = typeGO.GetComponent<RectTransform>();
-        typeRT.anchorMin = new Vector2(0f, 1f);
-        typeRT.anchorMax = new Vector2(1f, 1f);
-        typeRT.pivot     = new Vector2(0f, 1f);
-        typeRT.anchoredPosition = new Vector2(0, -15);
-        typeRT.sizeDelta = new Vector2(0, 14);
-        infoTypeText = typeGO.GetComponent<TextMeshProUGUI>();
-        infoTypeText.fontSize = 10;
-        infoTypeText.color = new Color(0.4f, 0.25f, 0.15f);
-        infoTypeText.raycastTarget = false;
-        infoTypeText.text = "";
-
-        // Mo ta vat pham
-        var descGO = new GameObject("Desc", typeof(RectTransform), typeof(TextMeshProUGUI));
-        descGO.transform.SetParent(infoBoxGO.transform, false);
-        var descRT = descGO.GetComponent<RectTransform>();
-        descRT.anchorMin = new Vector2(0f, 1f);
-        descRT.anchorMax = new Vector2(1f, 1f);
-        descRT.pivot     = new Vector2(0f, 1f);
-        descRT.anchoredPosition = new Vector2(0, -29);
-        descRT.sizeDelta = new Vector2(0, 32);
-        infoDescText = descGO.GetComponent<TextMeshProUGUI>();
-        infoDescText.fontSize = 10;
-        infoDescText.color = new Color(0.35f, 0.2f, 0.15f);
-        infoDescText.raycastTarget = false;
-        infoDescText.overflowMode = TextOverflowModes.Ellipsis;
-        infoDescText.text = "";
-
         // 4. Widget hien thi Tien Vang o goc tren ben trai cua so kho
         var goldBadgeGO = new GameObject("GoldBadge", typeof(RectTransform));
         goldBadgeGO.transform.SetParent(windowPanel.transform, false);
@@ -391,10 +415,11 @@ public class InventoryUI : MonoBehaviour
         var kb = Keyboard.current;
         if (kb != null)
         {
+            bool inventoryKey = kb.eKey.wasPressedThisFrame && !CowFarm.CowFarmPortal.IsInFarm;
             if (isOpen)
             {
                 // Khi dang mo kho: Bam E, Esc, hoac X deu thoat/dong kho
-                if (kb.eKey.wasPressedThisFrame || kb.escapeKey.wasPressedThisFrame || kb.xKey.wasPressedThisFrame || kb.tabKey.wasPressedThisFrame)
+                if (inventoryKey || kb.escapeKey.wasPressedThisFrame || kb.xKey.wasPressedThisFrame || kb.tabKey.wasPressedThisFrame)
                 {
                     Close();
                 }
@@ -402,7 +427,7 @@ public class InventoryUI : MonoBehaviour
             else
             {
                 // Khi dang dong kho: Bam E hoac Tab de mo
-                if (kb.eKey.wasPressedThisFrame || kb.tabKey.wasPressedThisFrame)
+                if (inventoryKey || kb.tabKey.wasPressedThisFrame)
                 {
                     Open();
                 }
@@ -410,10 +435,44 @@ public class InventoryUI : MonoBehaviour
         }
 
         // Cap nhat vi tri item dang cam theo chuot
+        var mouse = Mouse.current;
+        Vector2 mousePos = mouse != null ? mouse.position.ReadValue() : Vector2.zero;
+
         if (IsHoldingItem && heldItemRT != null)
         {
-            var mousePos = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
             UpdateHeldItemPosition(mousePos);
+        }
+
+        // Cap nhat vi tri tooltip noi theo con tro chuot
+        if (tooltipGO != null && tooltipGO.activeSelf && tooltipRT != null)
+        {
+            UpdateTooltipPosition(mousePos);
+        }
+    }
+
+    void UpdateTooltipPosition(Vector2 screenPos)
+    {
+        // Cach con tro chuot 15px de khong bi che
+        Vector2 targetPos = screenPos + new Vector2(15f, 15f);
+
+        // Giu cho tooltip khong bi tran ra khoi man hinh
+        float maxX = Screen.width - tooltipRT.sizeDelta.x - 10f;
+        float maxY = Screen.height - tooltipRT.sizeDelta.y - 10f;
+        targetPos.x = Mathf.Clamp(targetPos.x, 10f, maxX);
+        targetPos.y = Mathf.Clamp(targetPos.y, 10f, maxY);
+
+        if (rootCanvas == null || rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay)
+        {
+            tooltipRT.position = targetPos;
+        }
+        else
+        {
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                tooltipRT.parent as RectTransform,
+                targetPos,
+                rootCanvas.worldCamera,
+                out Vector2 localPoint);
+            tooltipRT.localPosition = localPoint;
         }
     }
 
@@ -682,7 +741,7 @@ public class InventoryUI : MonoBehaviour
         }
     }
 
-    // --- Tooltip / Info Box ---
+    // --- Tooltip / Info Floating Box ---
     public void ShowTooltip(ItemData item)
     {
         if (item == null)
@@ -691,52 +750,62 @@ public class InventoryUI : MonoBehaviour
             return;
         }
 
-        if (infoTitleText != null)
+        if (tooltipTitleText != null)
         {
-            infoTitleText.text = item.itemName;
-            // Mau theo loai vat pham
-            infoTitleText.color = item.itemType switch
+            tooltipTitleText.text = item.itemName;
+            tooltipTitleText.color = item.itemType switch
             {
-                ItemType.Tool => new Color(0.1f, 0.35f, 0.75f),
-                ItemType.Seed => new Color(0.15f, 0.55f, 0.15f),
-                ItemType.Crop => new Color(0.75f, 0.35f, 0.05f),
-                ItemType.FishFry => new Color(0.1f, 0.65f, 0.75f),
-                ItemType.Fish => new Color(0.05f, 0.5f, 0.7f),
-                ItemType.FishFood => new Color(0.85f, 0.55f, 0.1f),
-                _ => new Color(0.25f, 0.15f, 0.1f)
+                ItemType.Tool => new Color(0.35f, 0.65f, 1f),
+                ItemType.Seed => new Color(0.4f, 0.95f, 0.4f),
+                ItemType.Crop => new Color(1f, 0.75f, 0.3f),
+                ItemType.FishFry => new Color(0.3f, 0.85f, 1f),
+                ItemType.Fish => new Color(0.4f, 0.75f, 1f),
+                ItemType.FishFood => new Color(1f, 0.85f, 0.35f),
+                _ => new Color(1f, 0.9f, 0.5f)
             };
         }
 
-        if (infoTypeText != null)
+        if (tooltipTypeText != null)
         {
             string typeStr = item.itemType switch
             {
-                ItemType.Tool => $"[Cong cu: {item.toolType}]",
-                ItemType.Seed => $"[Hat giong]  (Lon len sau {item.growthDays} ngay)",
-                ItemType.Crop => $"[Nong san]  (Gia ban: {item.sellPrice} vang)",
-                ItemType.FishFry => $"[Ca giong]  (Tha xuong ao nuoc)",
-                ItemType.Fish => $"[Thuy san]  (Gia ban: {item.sellPrice} vang)",
-                ItemType.FishFood => $"[Thuc an ca]  (Cho ca an de mau lon)",
-                _ => "[Vat pham]"
+                ItemType.Tool => $"[Công cụ: {item.toolType}]",
+                ItemType.Seed => $"[Hạt giống] (Chín sau {item.growthDays} ngày)",
+                ItemType.Crop => $"[Nông sản] (Giá bán: {item.sellPrice} vàng)",
+                ItemType.FishFry => $"[Cá giống] (Thả xuống ao nuôi)",
+                ItemType.Fish => $"[Thủy sản] (Giá bán: {item.sellPrice} vàng)",
+                ItemType.FishFood => $"[Thức ăn cá] (Cho cá ăn mau lớn)",
+                _ => "[Vật phẩm]"
             };
-            infoTypeText.text = typeStr;
+            tooltipTypeText.text = typeStr;
         }
 
-        if (infoDescText != null)
+        if (tooltipDescText != null)
         {
             string desc = item.description;
             if (item.itemType == ItemType.Seed && item.cropYield != null)
             {
-                desc += $" (Thu hoach: {item.cropYield.itemName})";
+                desc += $" (Thu hoạch: {item.cropYield.itemName})";
             }
-            infoDescText.text = desc;
+            tooltipDescText.text = desc;
+        }
+
+        if (tooltipGO != null)
+        {
+            tooltipGO.SetActive(true);
+            var mouse = Mouse.current;
+            if (mouse != null)
+            {
+                UpdateTooltipPosition(mouse.position.ReadValue());
+            }
         }
     }
 
     public void HideTooltip()
     {
-        if (infoTitleText != null) infoTitleText.text = "";
-        if (infoTypeText != null) infoTypeText.text = "";
-        if (infoDescText != null) infoDescText.text = "";
+        if (tooltipGO != null)
+        {
+            tooltipGO.SetActive(false);
+        }
     }
 }
