@@ -1,19 +1,10 @@
-fileFormatVersion: 2
-guid: 2b5e9ae96c5644d8bae932f8b4ca68a2
+﻿fileFormatVersion: 2
+guid: 0e616f4d2a6b4b8da9df4aa0e13edc02
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 4914583134021697677
-    second: Wipe Pattern - Radial Quad_0
-  - first:
-      213: -9018724735656485362
-    second: Wipe Pattern - Radial Quad_1
-  - first:
-      213: -6620634185669495012
-    second: Wipe Pattern - Radial Quad_2
-  - first:
-      213: 8420003618668643785
-    second: Wipe Pattern - Radial Quad_3
+      213: -8658850166083280144
+    second: flower1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -109,35 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Wipe Pattern - Radial Quad_0
-      rect:
-        serializedVersion: 2
-        x: 0
-        y: 31
-        width: 33
-        height: 33
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: d804d72625b143440800000000000000
-      internalID: 4914583134021697677
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Wipe Pattern - Radial Quad_1
+      name: flower1_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 33
-        height: 32
+        width: 38
+        height: 39
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -146,52 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: e0e9a2cd2ad07d280800000000000000
-      internalID: -9018724735656485362
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Wipe Pattern - Radial Quad_2
-      rect:
-        serializedVersion: 2
-        x: 32
-        y: 31
-        width: 32
-        height: 33
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: c17bc572948ce14a0800000000000000
-      internalID: -6620634185669495012
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Wipe Pattern - Radial Quad_3
-      rect:
-        serializedVersion: 2
-        x: 32
-        y: 0
-        width: 32
-        height: 32
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 9c58f3a1eacd9d470800000000000000
-      internalID: 8420003618668643785
+      spriteID: 0f2264786a595d780800000000000000
+      internalID: -8658850166083280144
       vertices: []
       indices: 
       edges: []
@@ -210,12 +135,10 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Wipe Pattern - Radial Quad_0: 4914583134021697677
-      Wipe Pattern - Radial Quad_1: -9018724735656485362
-      Wipe Pattern - Radial Quad_2: -6620634185669495012
-      Wipe Pattern - Radial Quad_3: 8420003618668643785
+      flower1_0: -8658850166083280144
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+

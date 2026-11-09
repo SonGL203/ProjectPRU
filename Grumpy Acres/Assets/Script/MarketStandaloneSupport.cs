@@ -1,6 +1,7 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
+using System.Collections.Generic;
 
 public class MarketStandaloneSupport : MonoBehaviour
 {
@@ -24,8 +25,8 @@ public class MarketStandaloneSupport : MonoBehaviour
 
     public static void SetupMarketAtRuntime()
     {
-        // 1. Loai bo moi vien da trong Market theo yeu cau cua user ("bo may cuc da di")
-        RemoveAllRocks();
+        // 1. Don dep da cu bi vuong loi di (giu nguyen da trang tri Decor_Rock)
+        CleanupOldBlockers();
 
         // 2. Chuan hoa Camera va mau nen co xanh
         EnsureCamera();
@@ -39,18 +40,23 @@ public class MarketStandaloneSupport : MonoBehaviour
         // 5. Dam bao cac sap ban hat giong
         EnsureSeedStalls();
 
-        // 6. Khu trung lap EventSystem, Hotbar, AudioListener
+        // 6. Trang tri dep hon voi hoa, da canh va bui co (Co - Da - Hoa)
+        EnsureDecorations();
+
+        // 7. Khu trung lap EventSystem, Hotbar, AudioListener
         CleanupDuplicates();
     }
 
-    static void RemoveAllRocks()
+    static void CleanupOldBlockers()
     {
         var allObjs = Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None);
         foreach (var obj in allObjs)
         {
             if (obj == null) continue;
             string n = obj.name.ToLower();
-            if (n.Contains("rock") || n.Contains("boulder") || n.StartsWith("sv_0_24"))
+            if (n.StartsWith("decor_")) continue; // Khong xoa vat pham trang tri!
+
+            if (n.Contains("boulder") || n.StartsWith("sv_0_24") || n.Contains("blocker_rock"))
             {
                 Object.Destroy(obj);
             }
@@ -176,20 +182,148 @@ public class MarketStandaloneSupport : MonoBehaviour
             {
                 vendor.seedItem = tomatoSeed;
                 vendor.customPrice = 15;
-                vendor.stallName = "Sạp Hạt Giống Cà Chua";
+                vendor.stallName = "Sáº¡p Háº¡t Giá»‘ng CĂ  Chua";
             }
             else if (x < 11f)
             {
                 vendor.seedItem = carrotSeed;
                 vendor.customPrice = 12;
-                vendor.stallName = "Sạp Hạt Giống Cà Rốt";
+                vendor.stallName = "Sáº¡p Háº¡t Giá»‘ng CĂ  Rá»‘t";
             }
             else
             {
                 vendor.seedItem = wheatSeed;
                 vendor.customPrice = 8;
-                vendor.stallName = "Sạp Hạt Giống Lúa Mì";
+                vendor.stallName = "Sáº¡p Háº¡t Giá»‘ng LĂºa MĂ¬";
             }
+        }
+    }
+
+    public static void EnsureDecorations()
+    {
+        if (GameObject.Find("Market_Decorations") != null) return;
+
+        var root = new GameObject("Market_Decorations");
+        var objectsParent = GameObject.Find("Objects");
+        if (objectsParent != null) root.transform.SetParent(objectsParent.transform, false);
+
+        // Load tat ca cac Sprite trang tri tu Resources va AssetDatabase
+        var spriteMap = new Dictionary<string, Sprite>();
+        string[] spriteNames = new string[] { "flower0", "flower1", "flower2", "flower3", "rock0", "rock1", "grass0", "grass1" };
+
+        foreach (var sName in spriteNames)
+        {
+            var sp = Resources.Load<Sprite>($"Decorations/{sName}");
+#if UNITY_EDITOR
+            if (sp == null)
+            {
+                sp = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>($"Assets/Tilemap/Generated/Sprites/{sName}.png");
+            }
+#endif
+            if (sp != null) spriteMap[sName.ToLower()] = sp;
+        }
+
+        if (spriteMap.Count < spriteNames.Length)
+        {
+            var allSprites = Resources.FindObjectsOfTypeAll<Sprite>();
+            foreach (var sp in allSprites)
+            {
+                if (sp == null) continue;
+                string n = sp.name.ToLower();
+                if (!spriteMap.ContainsKey(n)) spriteMap[n] = sp;
+            }
+        }
+
+        // Danh sach toa do cac vat trang tri hai hoa quanh cho, ho nuoc va bai co
+        var items = new (string spriteKey, Vector3 pos, Vector3 scale)[]
+        {
+            // --- HOA (Flowers): cum hoa xinh xan quanh bai co va ho nuoc ---
+            ("flower0", new Vector3(3.0f, 4.5f, 0f), new Vector3(1.4f, 1.4f, 1f)),  // Hoa cuc vang
+            ("flower1", new Vector3(3.7f, 4.8f, 0f), new Vector3(1.3f, 1.3f, 1f)),  // Hoa tulip do
+            ("flower2", new Vector3(4.3f, 4.3f, 0f), new Vector3(1.4f, 1.4f, 1f)),  // Hoa tim dai
+            ("flower3", new Vector3(7.2f, 3.6f, 0f), new Vector3(1.3f, 1.3f, 1f)),  // Hoa chuong xanh
+            ("flower1", new Vector3(7.8f, 4.0f, 0f), new Vector3(1.4f, 1.4f, 1f)),
+            ("flower0", new Vector3(7.4f, 3.0f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+
+            // Hoa vien quanh bo ao (Pond rim)
+            ("flower3", new Vector3(9.6f, 5.2f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+            ("flower2", new Vector3(9.6f, 6.8f, 0f), new Vector3(1.4f, 1.4f, 1f)),
+            ("flower1", new Vector3(13.2f, 5.2f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+            ("flower0", new Vector3(13.2f, 6.8f, 0f), new Vector3(1.4f, 1.4f, 1f)),
+
+            // Hoa vuon nha va quanh hang rao (East lawn)
+            ("flower1", new Vector3(17.4f, 2.5f, 0f), new Vector3(1.4f, 1.4f, 1f)),
+            ("flower0", new Vector3(19.6f, 2.5f, 0f), new Vector3(1.4f, 1.4f, 1f)),
+            ("flower2", new Vector3(18.5f, 3.3f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+            ("flower3", new Vector3(15.5f, 5.0f, 0f), new Vector3(1.4f, 1.4f, 1f)),
+            ("flower1", new Vector3(16.3f, 5.3f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+            ("flower0", new Vector3(17.1f, 4.9f, 0f), new Vector3(1.4f, 1.4f, 1f)),
+            ("flower2", new Vector3(20.8f, 5.2f, 0f), new Vector3(1.4f, 1.4f, 1f)),
+
+            // Hoa hai ben sap hang
+            ("flower0", new Vector3(3.8f, 8.6f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+            ("flower1", new Vector3(7.4f, 8.6f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+            ("flower3", new Vector3(15.4f, 8.6f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+
+            // --- DA CANH (Ornamental Rocks & River Stones) ---
+            // Da bo vien quanh 4 goc ho nuoc
+            ("rock1", new Vector3(9.7f, 7.3f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+            ("rock1", new Vector3(13.1f, 7.3f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+            ("rock1", new Vector3(9.7f, 4.7f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+            ("rock1", new Vector3(13.1f, 4.7f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+            ("rock0", new Vector3(9.4f, 6.0f, 0f), new Vector3(1.2f, 1.2f, 1f)),
+            ("rock0", new Vector3(13.4f, 6.0f, 0f), new Vector3(1.2f, 1.2f, 1f)),
+
+            // Da tu nhien tren bai co tay va dong
+            ("rock0", new Vector3(2.2f, 3.2f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+            ("rock0", new Vector3(5.8f, 5.2f, 0f), new Vector3(1.2f, 1.2f, 1f)),
+            ("rock1", new Vector3(8.2f, 2.2f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+            ("rock0", new Vector3(14.8f, 3.6f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+            ("rock1", new Vector3(16.8f, 2.0f, 0f), new Vector3(1.2f, 1.2f, 1f)),
+            ("rock0", new Vector3(21.2f, 3.6f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+
+            // --- BUI CO (Grass Tufts & Clover) ---
+            // Bai co tay
+            ("grass0", new Vector3(1.8f, 5.0f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+            ("grass1", new Vector3(2.5f, 2.0f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+            ("grass0", new Vector3(5.0f, 3.5f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+            ("grass1", new Vector3(6.2f, 2.5f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+            ("grass0", new Vector3(8.4f, 5.0f, 0f), new Vector3(1.2f, 1.2f, 1f)),
+
+            // Quanh bo ao
+            ("grass1", new Vector3(10.1f, 4.5f, 0f), new Vector3(1.2f, 1.2f, 1f)),
+            ("grass0", new Vector3(12.7f, 4.5f, 0f), new Vector3(1.2f, 1.2f, 1f)),
+            ("grass0", new Vector3(10.1f, 7.5f, 0f), new Vector3(1.2f, 1.2f, 1f)),
+            ("grass1", new Vector3(12.7f, 7.5f, 0f), new Vector3(1.2f, 1.2f, 1f)),
+
+            // Bai co dong va vuon nha
+            ("grass0", new Vector3(14.2f, 4.4f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+            ("grass1", new Vector3(17.0f, 1.8f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+            ("grass0", new Vector3(19.8f, 1.8f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+            ("grass1", new Vector3(18.5f, 6.0f, 0f), new Vector3(1.2f, 1.2f, 1f)),
+            ("grass0", new Vector3(21.5f, 2.2f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+            ("grass1", new Vector3(21.8f, 6.8f, 0f), new Vector3(1.3f, 1.3f, 1f)),
+
+            // Ven duong di va ven sap
+            ("grass0", new Vector3(3.2f, 7.5f, 0f), new Vector3(1.2f, 1.2f, 1f)),
+            ("grass0", new Vector3(11.0f, 1.0f, 0f), new Vector3(1.2f, 1.2f, 1f)),
+            ("grass1", new Vector3(12.6f, 1.0f, 0f), new Vector3(1.2f, 1.2f, 1f)),
+        };
+
+        foreach (var item in items)
+        {
+            var go = new GameObject($"Decor_{item.spriteKey}");
+            go.transform.SetParent(root.transform, false);
+            go.transform.position = item.pos;
+            go.transform.localScale = item.scale;
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            if (spriteMap.TryGetValue(item.spriteKey.ToLower(), out var sprite) && sprite != null)
+            {
+                sr.sprite = sprite;
+            }
+            // Y-sorting: cang thap phia duoi man hinh thi hien thi de len tren
+            sr.sortingOrder = 100 + Mathf.RoundToInt((15f - item.pos.y) * 10f);
         }
     }
 
@@ -217,3 +351,4 @@ public class MarketStandaloneSupport : MonoBehaviour
         }
     }
 }
+

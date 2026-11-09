@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -13,11 +13,11 @@ public class WaterTilemapFishPond : MonoBehaviour
     [Header("Tilemap")]
     public Tilemap waterTilemap;
 
-    [Header("Cài đặt Hồ Cá")]
+    [Header("CĂ i Ä‘áº·t Há»“ CĂ¡")]
     public float interactRange = 7f;
     public int maxFishCapacity = 20;
 
-    [Header("Hiệu ứng Nước")]
+    [Header("Hiá»‡u á»©ng NÆ°á»›c")]
     public Sprite bubbleSprite;
     public Sprite rippleSprite;
     public Sprite shadowSprite;
@@ -170,14 +170,14 @@ public class WaterTilemapFishPond : MonoBehaviour
             var activeSlot = InventorySystem.Instance != null ? InventorySystem.Instance.GetSelected() : null;
             var activeItem = activeSlot != null ? activeSlot.item : null;
 
-            // 1. Click vào cá trưởng thành để thu hoạch
+            // 1. Click vĂ o cĂ¡ trÆ°á»Ÿng thĂ nh Ä‘á»ƒ thu hoáº¡ch
             if (TryHarvestClickedFish(worldPos))
                 return;
 
-            // 2. Click vào vùng nước để thả cá hoặc cho ăn
+            // 2. Click vĂ o vĂ¹ng nÆ°á»›c Ä‘á»ƒ tháº£ cĂ¡ hoáº·c cho Äƒn
             if (IsWater(worldPos))
             {
-                // Thả cá giống (FishFry) tạo bóng mờ dưới hồ
+                // Tháº£ cĂ¡ giá»‘ng (FishFry) táº¡o bĂ³ng má» dÆ°á»›i há»“
                 if (activeItem != null && (activeItem.itemType == ItemType.FishFry || activeItem.id.Contains("_fry")))
                 {
                     var data = FishItemsDatabase.GetFishDataByItem(activeItem);
@@ -185,14 +185,14 @@ public class WaterTilemapFishPond : MonoBehaviour
                     {
                         if (CurrentFishCount >= maxFishCapacity)
                         {
-                            ShowFloatingMessage(worldPos + Vector3.up * 0.4f, "Hồ cá đã đầy!", Color.yellow);
+                            ShowFloatingMessage(worldPos + Vector3.up * 0.4f, "Há»“ cĂ¡ Ä‘Ă£ Ä‘áº§y!", Color.yellow);
                             return;
                         }
 
-                        // Tạo bóng mờ cá dưới hồ
+                        // Táº¡o bĂ³ng má» cĂ¡ dÆ°á»›i há»“
                         AddFish(data, worldPos);
 
-                        // Trừ 1 cá giống khỏi túi đồ
+                        // Trá»« 1 cĂ¡ giá»‘ng khá»i tĂºi Ä‘á»“
                         if (activeSlot != null)
                         {
                             activeSlot.amount--;
@@ -202,12 +202,12 @@ public class WaterTilemapFishPond : MonoBehaviour
 
                         SpawnSplash(worldPos, 4);
                         SpawnRipple(worldPos);
-                        ShowFloatingMessage(worldPos + Vector3.up * 0.4f, $"Đã thả {data.speciesName} vào hồ! 🐟", new Color(0.2f, 0.85f, 1f));
+                        ShowFloatingMessage(worldPos + Vector3.up * 0.4f, $"ÄĂ£ tháº£ {data.speciesName} vĂ o há»“! đŸŸ", new Color(0.2f, 0.85f, 1f));
                         return;
                     }
                 }
 
-                // Cho cá ăn (FishFood)
+                // Cho cĂ¡ Äƒn (FishFood)
                 if (activeItem != null && (activeItem.itemType == ItemType.FishFood || activeItem.id == "fish_food"))
                 {
                     SpawnFoodPellet(worldPos);
@@ -221,7 +221,7 @@ public class WaterTilemapFishPond : MonoBehaviour
 
                     SpawnSplash(worldPos, 3);
                     SpawnRipple(worldPos);
-                    ShowFloatingMessage(worldPos + Vector3.up * 0.4f, "Rải thức ăn cá! 🍞", new Color(1f, 0.85f, 0.3f));
+                    ShowFloatingMessage(worldPos + Vector3.up * 0.4f, "Ráº£i thá»©c Äƒn cĂ¡! đŸ", new Color(1f, 0.85f, 0.3f));
                     return;
                 }
             }
@@ -259,8 +259,8 @@ public class WaterTilemapFishPond : MonoBehaviour
                 else
                 {
                     int pct = Mathf.RoundToInt(fish.GrowthProgress * 100f);
-                    string status = fish.IsHungry ? " (ĐANG ĐÓI!)" : "";
-                    ShowFloatingMessage(fish.transform.position + Vector3.up * 0.4f, $"Cá đang lớn ({pct}%){status}", Color.white);
+                    string status = fish.IsHungry ? " (ÄANG ÄĂ“I!)" : "";
+                    ShowFloatingMessage(fish.transform.position + Vector3.up * 0.4f, $"CĂ¡ Ä‘ang lá»›n ({pct}%){status}", Color.white);
                     return true;
                 }
             }
@@ -342,14 +342,44 @@ public class WaterTilemapFishPond : MonoBehaviour
         }
     }
 
+    static Texture2D _pondWhitePixel;
+    static void DrawPondPanel(Rect r, Color bg, Color border, float borderWidth = 1.5f)
+    {
+        if (_pondWhitePixel == null)
+        {
+            _pondWhitePixel = new Texture2D(1, 1);
+            _pondWhitePixel.SetPixel(0, 0, Color.white);
+            _pondWhitePixel.Apply();
+        }
+        Color old = GUI.color;
+        GUI.color = new Color(0f, 0f, 0f, 0.45f);
+        GUI.DrawTexture(new Rect(r.x + 2f, r.y + 2f, r.width, r.height), _pondWhitePixel);
+        GUI.color = border;
+        GUI.DrawTexture(r, _pondWhitePixel);
+        GUI.color = bg;
+        GUI.DrawTexture(new Rect(r.x + borderWidth, r.y + borderWidth, r.width - borderWidth * 2f, r.height - borderWidth * 2f), _pondWhitePixel);
+        GUI.color = old;
+    }
+
+    static void DrawPondShadowLabel(Rect r, string text, GUIStyle style, Color textColor, Color shadowColor, float offset = 1.5f)
+    {
+        Color old = style.normal.textColor;
+        style.normal.textColor = shadowColor;
+        GUI.Label(new Rect(r.x + offset, r.y + offset, r.width, r.height), text, style);
+        style.normal.textColor = textColor;
+        GUI.Label(r, text, style);
+        style.normal.textColor = old;
+    }
+
     void OnGUI()
     {
         if (Camera.main == null) return;
+        float scale = Mathf.Clamp(Screen.height / 1080f, 1.0f, 2.2f);
 
         // Floating texts
         var textStyle = new GUIStyle(GUI.skin.label)
         {
-            fontSize = 14,
+            fontSize = Mathf.RoundToInt(15 * scale),
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter
         };
@@ -361,11 +391,11 @@ public class WaterTilemapFishPond : MonoBehaviour
             if (screen.z < 0) continue;
 
             float alpha = Mathf.Clamp01(ft.time);
-            textStyle.normal.textColor = new Color(ft.color.r, ft.color.g, ft.color.b, alpha);
+            Color c = new Color(ft.color.r, ft.color.g, ft.color.b, alpha);
 
-            float w = 240f;
-            float h = 26f;
-            GUI.Label(new Rect(screen.x - w * 0.5f, Screen.height - screen.y - h, w, h), ft.text, textStyle);
+            float w = 280f * scale;
+            float h = 30f * scale;
+            DrawPondShadowLabel(new Rect(screen.x - w * 0.5f, Screen.height - screen.y - h, w, h), ft.text, textStyle, c, new Color(0, 0, 0, alpha), 1.5f);
         }
 
         // Hover tooltip on fish shadow
@@ -374,50 +404,46 @@ public class WaterTilemapFishPond : MonoBehaviour
             Vector3 screen = Camera.main.WorldToScreenPoint(hoveredFish.transform.position + Vector3.up * 0.65f);
             if (screen.z > 0)
             {
-                float w = 220f;
-                float h = 64f;
+                float w = Mathf.Round(260f * scale);
+                float h = Mathf.Round(80f * scale);
                 float x = screen.x - w * 0.5f;
                 float y = Screen.height - screen.y - h;
 
-                GUI.Box(new Rect(x, y, w, h), "");
+                DrawPondPanel(new Rect(x, y, w, h), new Color(0.10f, 0.14f, 0.18f, 0.95f), new Color(0.3f, 0.85f, 1.0f, 0.9f), 1.5f * scale);
 
                 var titleStyle = new GUIStyle(GUI.skin.label)
                 {
-                    fontSize = 13,
+                    fontSize = Mathf.RoundToInt(14 * scale),
                     fontStyle = FontStyle.Bold,
                     alignment = TextAnchor.MiddleCenter
                 };
-                titleStyle.normal.textColor = Color.yellow;
-                GUI.Label(new Rect(x, y + 2, w, 20), hoveredFish.fishData.speciesName, titleStyle);
+                DrawPondShadowLabel(new Rect(x, y + 4f * scale, w, 22f * scale), $"🐟 {hoveredFish.fishData.speciesName.ToUpper()}", titleStyle, new Color(1f, 0.92f, 0.35f), Color.black, 1.5f);
 
                 var statusStyle = new GUIStyle(GUI.skin.label)
                 {
-                    fontSize = 11,
+                    fontSize = Mathf.RoundToInt(12 * scale),
+                    fontStyle = FontStyle.Bold,
                     alignment = TextAnchor.MiddleCenter
                 };
 
                 if (hoveredFish.IsMature)
                 {
-                    statusStyle.normal.textColor = new Color(0.2f, 1f, 0.5f);
-                    GUI.Label(new Rect(x, y + 20, w, 18), $"★ Đã lớn! (Bán được {hoveredFish.fishData.adultSellPrice} vàng)", statusStyle);
+                    DrawPondShadowLabel(new Rect(x, y + 26f * scale, w, 22f * scale), $"★ Đã lớn! (Bán được {hoveredFish.fishData.adultSellPrice} vàng)", statusStyle, new Color(0.3f, 1f, 0.5f), Color.black, 1.5f);
                 }
                 else
                 {
                     int pct = Mathf.RoundToInt(hoveredFish.GrowthProgress * 100f);
-                    statusStyle.normal.textColor = Color.white;
-                    GUI.Label(new Rect(x, y + 20, w, 18), $"Đang lớn: {pct}%", statusStyle);
+                    DrawPondShadowLabel(new Rect(x, y + 26f * scale, w, 22f * scale), $"Đang lớn: {pct}%", statusStyle, Color.white, Color.black, 1.5f);
                 }
 
                 if (hoveredFish.IsHungry)
                 {
-                    statusStyle.normal.textColor = new Color(1f, 0.4f, 0.3f);
-                    GUI.Label(new Rect(x, y + 38, w, 18), "⚠ Đang ĐÓI! (Cần rải thức ăn)", statusStyle);
+                    DrawPondShadowLabel(new Rect(x, y + 48f * scale, w, 22f * scale), "⚠ Đang ĐÓI! (Cần rải thức ăn)", statusStyle, new Color(1f, 0.4f, 0.3f), Color.black, 1.5f);
                 }
                 else
                 {
                     int minLeft = Mathf.CeilToInt(hoveredFish.hungerTimer / 60f);
-                    statusStyle.normal.textColor = new Color(0.3f, 0.9f, 1f);
-                    GUI.Label(new Rect(x, y + 38, w, 18), $"No bụng (còn {minLeft} phút)", statusStyle);
+                    DrawPondShadowLabel(new Rect(x, y + 48f * scale, w, 22f * scale), $"No bụng (còn {minLeft} phút)", statusStyle, new Color(0.4f, 0.92f, 1f), Color.black, 1.5f);
                 }
             }
         }
