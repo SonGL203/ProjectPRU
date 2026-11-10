@@ -130,7 +130,7 @@ MonoBehaviour:
   maxHealth: 90
   deathDelay: 1
   bulletDamage: 19
-  fireInterval: 0.8
+  fireInterval: 1.0
   shootRange: 6.5
   bulletPrefab: {fileID: 0}
   muzzle: {fileID: 0}

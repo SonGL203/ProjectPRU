@@ -10,7 +10,6 @@ public class PlayerWallet : MonoBehaviour
 
     void Awake()
     {
-        if (Instance && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
     }
 

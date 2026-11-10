@@ -42,17 +42,6 @@ public static class InventoryBootstrap
             Object.DontDestroyOnLoad(fishMgrGO);
         }
 
-        // 2.3 Kiem tra FishVendor (dat gan bo ao toa do x=29.5, y=18.5)
-        if (Object.FindFirstObjectByType<FishVendor>() == null)
-        {
-            var waterGO = GameObject.Find("Water");
-            if (waterGO != null)
-            {
-                var vendorGO = new GameObject("FishVendor", typeof(BoxCollider2D), typeof(FishVendor));
-                vendorGO.transform.position = new Vector3(29.5f, 18.5f, 0f);
-            }
-        }
-
         // 2.4 Kiem tra HouseStorageTrigger tren ngoi nha
         var houseGO = GameObject.Find("house (1)");
         if (houseGO != null)

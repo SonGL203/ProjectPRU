@@ -2,17 +2,21 @@ using UnityEngine;
 
 // Gan len Main Camera:
 // - Chan nguoi choi khong chay ra ngoai vung CameraBoundsArea (ban do).
-// - Giu camera khong lo ra ngoai chinh vung do (vung lon nhat chua nguoi choi).
+// - Camera bam theo nguoi choi moi frame (LateUpdate), bi gioi han trong vung nho nhat dang chua nguoi choi.
+//   Neu vung nho hon man hinh thi camera can giua vung do.
 [DefaultExecutionOrder(1000)]
 [RequireComponent(typeof(Camera))]
 public class CameraBounds : MonoBehaviour
 {
     [SerializeField, Min(0f)] float playerMargin = 0.4f;
+    [Tooltip("Bat: camera khong lo ra ngoai ban do (sat mep thi nguoi choi lech khoi giua man hinh). Tat: camera luon o giua nguoi choi, sat mep se thay phan trong ben ngoai")]
+    [SerializeField] bool keepInsideMap = true;
 
     Camera cam;
     PlayerMove player;
     Rigidbody2D playerBody;
     Rect lastPlayerRect;
+    Rect lastCameraRect;
     bool hasLastPlayerRect;
 
     void Awake()
@@ -32,38 +36,51 @@ public class CameraBounds : MonoBehaviour
         }
 
         Rect limit;
-        if (!KeepPlayerInside(out limit)) return;
-        KeepCameraInside(limit);
+        Rect cameraArea;
+        if (!KeepPlayerInside(out limit, out cameraArea)) return;
+
+        FocusCamera(cameraArea, limit);
     }
 
-    // Tra ve vung gioi han dang ap dung (vung lon nhat chua nguoi choi, hoac vung gan nhat ho vua o)
-    bool KeepPlayerInside(out Rect limit)
+    // limit: vung lon nhat chua nguoi choi, dung de chan nguoi choi (khong bi nhot trong vung con)
+    // cameraArea: vung nho nhat chua nguoi choi, dung de gioi han camera (ban do hien tai)
+    bool KeepPlayerInside(out Rect limit, out Rect cameraArea)
     {
         Vector2 position = player.transform.position;
 
-        // Gioi han nguoi choi = vung lon nhat dang chua nguoi choi (de khong bi nhot trong vung con)
         bool found = false;
         limit = new Rect();
+        cameraArea = new Rect();
         float largest = -1f;
+        float smallest = float.MaxValue;
         foreach (var area in CameraBoundsArea.All)
         {
             Rect rect = area.GetRect();
             if (!rect.Contains(position)) continue;
             float size = rect.width * rect.height;
-            if (size <= largest) continue;
-            limit = rect;
-            largest = size;
+            if (size > largest)
+            {
+                limit = rect;
+                largest = size;
+            }
+            if (size < smallest)
+            {
+                cameraArea = rect;
+                smallest = size;
+            }
             found = true;
         }
 
         if (found)
         {
             lastPlayerRect = limit;
+            lastCameraRect = cameraArea;
             hasLastPlayerRect = true;
         }
         else if (hasLastPlayerRect)
         {
             limit = lastPlayerRect;
+            cameraArea = lastCameraRect;
         }
         else
         {
@@ -92,13 +109,30 @@ public class CameraBounds : MonoBehaviour
         return true;
     }
 
-    void KeepCameraInside(Rect best)
+    void FocusCamera(Rect area, Rect map)
     {
         float halfHeight = cam.orthographicSize;
         float halfWidth = halfHeight * cam.aspect;
+        Vector3 focus = player.transform.position;
         Vector3 view = transform.position;
-        view.x = best.width <= halfWidth * 2f ? best.center.x : Mathf.Clamp(view.x, best.xMin + halfWidth, best.xMax - halfWidth);
-        view.y = best.height <= halfHeight * 2f ? best.center.y : Mathf.Clamp(view.y, best.yMin + halfHeight, best.yMax - halfHeight);
+
+        if (keepInsideMap)
+        {
+            view.x = area.width <= halfWidth * 2f ? ClampAxis(area.center.x, map.xMin + halfWidth, map.xMax - halfWidth, map.center.x) : Mathf.Clamp(focus.x, area.xMin + halfWidth, area.xMax - halfWidth);
+            view.y = area.height <= halfHeight * 2f ? ClampAxis(area.center.y, map.yMin + halfHeight, map.yMax - halfHeight, map.center.y) : Mathf.Clamp(focus.y, area.yMin + halfHeight, area.yMax - halfHeight);
+        }
+        else
+        {
+            view.x = area.width <= halfWidth * 2f ? area.center.x : focus.x;
+            view.y = area.height <= halfHeight * 2f ? area.center.y : focus.y;
+        }
         transform.position = view;
+    }
+
+    // Vung nho hon man hinh: dat camera giua vung, nhung khong de lo ra ngoai ban do lon
+    static float ClampAxis(float wanted, float min, float max, float fallback)
+    {
+        if (min > max) return fallback;
+        return Mathf.Clamp(wanted, min, max);
     }
 }

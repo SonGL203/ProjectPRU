@@ -147,12 +147,12 @@ public class Enemy : MonoBehaviour
             if (s < bestScore) { bestScore = s; best = key; }
         }
 
-        foreach (var c in Cowboy.Active)
-            if (c && c.Targetable) Consider(c, c.transform.position);
+        foreach (var f in GuardFrame.All)
+            if (f && f.IsTargetable) Consider(f, f.transform.position);
 
         if (best == null)
-            foreach (var f in GuardFrame.All)
-                if (f && f.IsTargetable) Consider(f, f.transform.position);
+            foreach (var c in Cowboy.Active)
+                if (c && c.Targetable) Consider(c, c.transform.position);
 
         var crops = CropManager.Instance;
         if (best == null && crops && crops.soilTilemap)

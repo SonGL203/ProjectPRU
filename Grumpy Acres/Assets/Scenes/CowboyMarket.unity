@@ -16631,7 +16631,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MarketView
   spawn: {fileID: 854388973}
-  orthoSize: 7.4
+  orthoSize: 5
 --- !u!1 &1657867102
 GameObject:
   m_ObjectHideFlags: 0
